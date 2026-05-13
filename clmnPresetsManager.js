@@ -1288,6 +1288,18 @@ class ColumnPresetsManagerUI {
         }
 
         await importPresetToSelectedAccounts(this.selectedImportAccountIds, presetContent, this);
+
+        // Try to import saved column sizes in the background (best-effort).
+        // This step should not block successful preset import.
+        if (presetContent.sizes && presetContent.sizes.length > 0) {
+          for (const accountId of this.selectedImportAccountIds) {
+            try {
+              await importSizesToAccount(accountId, presetContent.sizes);
+            } catch (sizeError) {
+              logger.warning(`Фоновый импорт ширин для аккаунта ${accountId} пропущен: ${sizeError}`);
+            }
+          }
+        }
         
         // Only ask for reload if current account was in the import list
         const currentAccountId = require("BusinessUnifiedNavigationContext").adAccountID;
