@@ -1,33 +1,7 @@
-:root {
-  --fbtool-bg: #0f1715;
-  --fbtool-bg-deep: #0b1210;
-  --fbtool-surface: #121f1b;
+/* FB Spend Manager — Widget CSS Only */
 
-  --fbtool-border: #2b433a;
-  --fbtool-border-soft: #22372f;
-  --fbtool-border-input: #2f4a40;
-
-  --fbtool-text: #e8fff0;
-  --fbtool-text-soft: #c7e0d2;
-  --fbtool-text-muted: #99b3a6;
-
-  --fbtool-accent: #4dff8f;
-  --fbtool-accent-text: #052012;
-
-  --fbtool-success: #9bff7d;
-  --fbtool-error: #ff8f8f;
-
-  --fbtool-radius: 9px;
-  --fbtool-radius-lg: 14px;
-
-  --fbtool-font: Inter, "Segoe UI", Arial, sans-serif;
-  --fbtool-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
-  --fbtool-transition: 160ms ease;
-}
-
-/* Root */
-
-.fbtool {
+#fbsm-ui-root {
+  /* Контейнер виджета */
   position: fixed;
   left: 50%;
   top: 50%;
@@ -36,271 +10,127 @@
   max-height: calc(100vh - 40px);
   overflow: auto;
   z-index: 2147483647;
-
-  background: var(--fbtool-bg);
-  color: var(--fbtool-text);
-  border: 1px solid var(--fbtool-border);
-  border-radius: var(--fbtool-radius-lg);
-  box-shadow: var(--fbtool-shadow);
-
-  font: 13px/1.4 var(--fbtool-font);
+  background: #0f1715;
+  color: #e8fff0;
+  border: 1px solid #2b433a;
+  border-radius: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.45);
+  font: 13px/1.4 Inter, Segoe UI, Arial, sans-serif;
   padding: 14px;
 }
 
-.fbtool,
-.fbtool * {
+#fbsm-ui-root * {
   box-sizing: border-box;
 }
 
-/* Header */
-
-.fbtool__header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 8px;
-  position: relative;
-  padding-right: 34px;
-  margin-bottom: 10px;
-}
-
-.fbtool__title {
-  margin: 0;
-  color: var(--fbtool-accent);
-  font-size: 32px;
-  line-height: 1.05;
-  font-weight: 800;
-  letter-spacing: 0.01em;
-}
-
-.fbtool__meta {
-  margin-top: 4px;
-  color: var(--fbtool-text-muted);
-  font-size: 11px;
-}
-
-.fbtool__close {
-  position: absolute;
-  top: 0;
-  right: 0;
-
-  background: transparent;
-  border: 0;
-  color: #d3e8dc;
-
-  padding: 0;
-  cursor: pointer;
-  line-height: 1;
-  font-size: 24px;
-  font-weight: 700;
-
-  transition: color var(--fbtool-transition), opacity var(--fbtool-transition);
-}
-
-.fbtool__close:hover {
-  color: var(--fbtool-text);
-}
-
-/* Typography */
-
-.fbtool label,
-.fbtool__label {
-  display: block;
-  margin: 8px 0 4px;
-  color: var(--fbtool-text-soft);
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.fbtool__note {
-  margin-top: 8px;
-  color: var(--fbtool-text-muted);
-  font-size: 11px;
-}
-
-.fbtool__muted {
-  color: var(--fbtool-text-muted);
-}
-
-.fbtool__success {
-  color: var(--fbtool-success);
-}
-
-.fbtool__error {
-  color: var(--fbtool-error);
-}
-
-/* Layout helpers */
-
-.fbtool__row {
+/* Шапка и заголовки */
+#fbsm-ui-root .r {
   display: flex;
   gap: 8px;
   align-items: center;
 }
 
-.fbtool__row > * {
-  flex: 1;
+#fbsm-ui-root .sp {
+  justify-content: space-between;
+  position: relative;
+  padding-right: 34px;
 }
 
-.fbtool__grid {
+#fbsm-ui-root .t {
+  font-size: 32px;
+  line-height: 1.05;
+  font-weight: 800;
+  color: #4dff8f;
+  letter-spacing: 0.01em;
+}
+
+#fbsm-ui-root .m {
+  color: #99b3a6;
+  font-size: 11px;
+  margin-top: 4px;
+}
+
+/* Элементы управления (Input, Select, Button) */
+#fbsm-ui-root label {
+  display: block;
+  margin: 8px 0 4px;
+  color: #c7e0d2;
+  font-size: 12px;
+}
+
+#fbsm-ui-root select,
+#fbsm-ui-root input,
+#fbsm-ui-root button:not(.x) {
+  width: 100%;
+  border-radius: 9px;
+  border: 1px solid #2f4a40;
+  background: #121f1b;
+  color: #e8fff0;
+  padding: 9px;
+}
+
+#fbsm-ui-root select[multiple] {
+  min-height: 110px;
+}
+
+#fbsm-ui-root .grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 8px;
 }
 
-.fbtool__stack > * + * {
-  margin-top: 8px;
-}
-
-/* Fields */
-
-.fbtool input,
-.fbtool select,
-.fbtool textarea,
-.fbtool button:not(.fbtool__close) {
-  width: 100%;
-  border-radius: var(--fbtool-radius);
-  border: 1px solid var(--fbtool-border-input);
-  background: var(--fbtool-surface);
-  color: var(--fbtool-text);
-  padding: 9px;
-  font: inherit;
-  outline: none;
-}
-
-.fbtool input:focus,
-.fbtool select:focus,
-.fbtool textarea:focus {
-  border-color: var(--fbtool-accent);
-}
-
-.fbtool input::placeholder,
-.fbtool textarea::placeholder {
-  color: var(--fbtool-text-muted);
-}
-
-.fbtool textarea {
-  min-height: 96px;
-  resize: vertical;
-}
-
-.fbtool select[multiple] {
-  min-height: 110px;
-}
-
-/* Checkbox row */
-
-.fbtool__checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  color: var(--fbtool-text-soft);
-  font-size: 12px;
-}
-
-.fbtool__checkbox input[type="checkbox"] {
-  width: auto;
-  margin: 0;
-  padding: 0;
-  accent-color: var(--fbtool-accent);
-}
-
-/* Buttons */
-
-.fbtool__btn,
-.fbtool button:not(.fbtool__close) {
+/* Кнопки и статусы */
+#fbsm-ui-root .btn {
   cursor: pointer;
   font-weight: 700;
-  transition:
-    background var(--fbtool-transition),
-    border-color var(--fbtool-transition),
-    color var(--fbtool-transition),
-    opacity var(--fbtool-transition);
+  transition: opacity 0.2s;
 }
 
-.fbtool__btn:hover,
-.fbtool button:not(.fbtool__close):hover {
-  border-color: var(--fbtool-accent);
-}
-
-.fbtool__btn:disabled,
-.fbtool button:not(.fbtool__close):disabled {
+#fbsm-ui-root .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 
-.fbtool__btn--primary {
-  background: var(--fbtool-accent) !important;
-  color: var(--fbtool-accent-text) !important;
-  border-color: var(--fbtool-accent) !important;
+#fbsm-ui-root .btn-main {
+  background: #4dff8f;
+  color: #052012;
+  border-color: #4dff8f;
 }
 
-.fbtool__btn--secondary {
-  background: var(--fbtool-surface);
-  color: var(--fbtool-text);
-  border-color: var(--fbtool-border-input);
+#fbsm-ui-root .x {
+  /* Кнопка закрытия (крестик) */
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: transparent;
+  border: 0;
+  color: #d3e8dc;
+  padding: 0;
+  cursor: pointer;
+  line-height: 1;
+  font-size: 24px;
+  font-weight: 700;
 }
 
-/* Log */
-
-.fbtool__log {
+/* Секция логов */
+#fbsm-ui-root .log {
   margin-top: 10px;
-  background: var(--fbtool-bg-deep);
-  border: 1px solid var(--fbtool-border-soft);
+  background: #0b1210;
+  border: 1px solid #22372f;
   border-radius: 10px;
   padding: 8px;
   max-height: 180px;
   overflow: auto;
-
-  color: var(--fbtool-text);
   font-size: 12px;
   white-space: pre-wrap;
+  font-family: monospace;
 }
 
-.fbtool__log .ok,
-.fbtool__log-ok {
-  color: var(--fbtool-success);
-}
+#fbsm-ui-root .ok { color: #9bff7d; }
+#fbsm-ui-root .err { color: #ff8f8f; }
 
-.fbtool__log .err,
-.fbtool__log-err {
-  color: var(--fbtool-error);
-}
-
-/* Spacing utilities */
-
-.fbtool__mt-8 {
+#fbsm-ui-root .note {
   margin-top: 8px;
-}
-
-.fbtool__mt-10 {
-  margin-top: 10px;
-}
-
-.fbtool__mt-12 {
-  margin-top: 12px;
-}
-
-/* Scrollbar */
-
-.fbtool::-webkit-scrollbar,
-.fbtool *::-webkit-scrollbar {
-  width: 10px;
-}
-
-.fbtool::-webkit-scrollbar-track,
-.fbtool *::-webkit-scrollbar-track {
-  background: var(--fbtool-bg-deep);
-}
-
-.fbtool::-webkit-scrollbar-thumb,
-.fbtool *::-webkit-scrollbar-thumb {
-  background: var(--fbtool-border-input);
-  border-radius: 10px;
-}
-
-.fbtool::-webkit-scrollbar-thumb:hover,
-.fbtool *::-webkit-scrollbar-thumb:hover {
-  background: var(--fbtool-accent);
+  color: #99b3a6;
+  font-size: 11px;
 }
