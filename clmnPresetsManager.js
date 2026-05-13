@@ -741,8 +741,10 @@ class ColumnPresetsManagerUI {
     this.div.style.left = "50%";
     this.div.style.transform = "translate(-50%, -50%)";
     this.div.style.width = "min(420px, calc(100vw - 24px))";
+    this.div.style.height = "680px";
     this.div.style.maxHeight = "calc(100vh - 40px)";
     this.div.style.overflowY = "auto";
+    this.div.style.overflowX = "hidden";
     this.div.style.background = UITheme.panelBg;
     this.div.style.color = UITheme.panelText;
     this.div.style.border = UITheme.panelBorder;
@@ -987,16 +989,20 @@ class ColumnPresetsManagerUI {
     
     const selectAllContainer = document.createElement("div");
     selectAllContainer.style.marginBottom = "6px";
+    selectAllContainer.style.display = "flex";
+    selectAllContainer.style.alignItems = "center";
+    selectAllContainer.style.gap = "8px";
     
     const selectAllCheckbox = document.createElement("input");
     selectAllCheckbox.type = "checkbox";
     selectAllCheckbox.id = "ywbSelectAllAccounts";
-    selectAllCheckbox.style.marginRight = "5px";
+    selectAllCheckbox.style.margin = "0";
     
     const selectAllLabel = document.createElement("label");
     selectAllLabel.htmlFor = "ywbSelectAllAccounts";
-    selectAllLabel.textContent = "Выбрать все аккаунты";
+    selectAllLabel.textContent = "Выбрать все аккаунты (Ctrl/Cmd для мультивыбора)";
     selectAllLabel.style.fontSize = "14px";
+    selectAllLabel.style.margin = "0";
     
     selectAllContainer.appendChild(selectAllCheckbox);
     selectAllContainer.appendChild(selectAllLabel);
@@ -1151,7 +1157,8 @@ class ColumnPresetsManagerUI {
     this.logArea = document.createElement("div");
     this.logArea.id = "ywbLogArea";
     this.logArea.style.width = "100%";
-    this.logArea.style.maxHeight = "180px";
+    this.logArea.style.height = "320px";
+    this.logArea.style.maxHeight = "320px";
     this.logArea.style.overflowY = "auto";
     this.logArea.style.backgroundColor = UITheme.logBg;
     this.logArea.style.border = UITheme.logBorder;
@@ -1232,25 +1239,6 @@ class ColumnPresetsManagerUI {
     
     const importDropdown = this.createImportAccountDropdown();
     
-    const importSizesCheckbox = document.createElement("div");
-    importSizesCheckbox.style.display = "flex";
-    importSizesCheckbox.style.alignItems = "center";
-    importSizesCheckbox.style.margin = "10px 0";
-    importSizesCheckbox.style.width = "100%";
-    
-    const sizesCheckbox = document.createElement("input");
-    sizesCheckbox.type = "checkbox";
-    sizesCheckbox.id = "ywbImportSizes";
-    sizesCheckbox.style.marginRight = "10px";
-    
-    const sizesLabel = document.createElement("label");
-    sizesLabel.htmlFor = "ywbImportSizes";
-    sizesLabel.textContent = "Также импортировать ширины колонок";
-    sizesLabel.style.fontSize = "14px";
-    
-    importSizesCheckbox.appendChild(sizesCheckbox);
-    importSizesCheckbox.appendChild(sizesLabel);
-    
     const importButton = this.createButton("import-btn", "Импортировать пресет в выбранные аккаунты", async () => {
       if (!this.selectedImportAccountIds || this.selectedImportAccountIds.length === 0) {
         alert("Выберите хотя бы один аккаунт для импорта.");
@@ -1285,14 +1273,6 @@ class ColumnPresetsManagerUI {
 
         await importPresetToSelectedAccounts(this.selectedImportAccountIds, presetContent, this);
         
-        // Import sizes if checkbox is checked
-        const importSizes = document.getElementById("ywbImportSizes").checked;
-        if (importSizes && presetContent.sizes && presetContent.sizes.length > 0) {
-          for (const accountId of this.selectedImportAccountIds) {
-            await importSizesToAccount(accountId, presetContent.sizes);
-          }
-        }
-        
         // Only ask for reload if current account was in the import list
         const currentAccountId = require("BusinessUnifiedNavigationContext").adAccountID;
         if (this.selectedImportAccountIds.includes(currentAccountId)) {
@@ -1308,7 +1288,6 @@ class ColumnPresetsManagerUI {
     });
     
     importTabContent.appendChild(importDropdown);
-    importTabContent.appendChild(importSizesCheckbox);
     importTabContent.appendChild(importButton);
 
     // Add tab contents to div
@@ -1319,24 +1298,6 @@ class ColumnPresetsManagerUI {
     const logArea = this.createLogArea();
     div.appendChild(logArea);
     
-    // Create a small link for copying as bookmark
-    const copyBookmarkLink = document.createElement("a");
-    copyBookmarkLink.href = "#";
-	    copyBookmarkLink.textContent = "Скопировать как bookmarklet";
-    copyBookmarkLink.style.fontSize = "12px";
-	    copyBookmarkLink.style.color = UITheme.accentMuted;
-    copyBookmarkLink.style.textDecoration = "underline";
-    copyBookmarkLink.style.cursor = "pointer";
-    copyBookmarkLink.style.marginTop = "10px";
-    copyBookmarkLink.style.display = "block";
-    copyBookmarkLink.style.textAlign = "center";
-    copyBookmarkLink.onclick = (e) => {
-      e.preventDefault();
-      copyScriptAsBase64Bookmarklet();
-    };
-    
-    div.appendChild(copyBookmarkLink);
-
     // Add div to body
     document.body.appendChild(div);
     
