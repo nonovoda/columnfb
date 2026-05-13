@@ -1145,6 +1145,7 @@ class ColumnPresetsManagerUI {
   createLogArea() {
     const logContainer = document.createElement("div");
     logContainer.style.width = "100%";
+    logContainer.style.alignSelf = "stretch";
     logContainer.style.marginTop = "10px";
     logContainer.style.marginLeft = "auto";
     logContainer.style.marginRight = "auto";
@@ -1160,6 +1161,9 @@ class ColumnPresetsManagerUI {
     this.logArea = document.createElement("div");
     this.logArea.id = "ywbLogArea";
     this.logArea.style.width = "100%";
+    this.logArea.style.maxWidth = "100%";
+    this.logArea.style.alignSelf = "stretch";
+    this.logArea.style.boxSizing = "border-box";
     this.logArea.style.minHeight = "120px";
     this.logArea.style.maxHeight = "320px";
     this.logArea.style.overflowY = "auto";
