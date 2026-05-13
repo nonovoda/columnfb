@@ -79,6 +79,8 @@ function validatePresetImportContent(payload) {
   return { valid: true };
 }
 
+const DEFAULT_PRESET_CONTENT = {"schemaVersion":"2.0.0","exportedAt":"2026-05-13T21:33:35.851Z","source":{"accountId":"1777998319827792","apiVersion":"v23.0","toolVersion":"2026.05.13"},"preset":{"attribution_windows":["default"],"columns":[{"column_id":"name","width":0},{"column_id":"campaign_name","width":0},{"column_id":"delivery","width":0},{"column_id":"recommendations_guidance","width":0},{"column_id":"budget","width":0},{"column_id":"spend","width":0},{"column_id":"results","width":0},{"column_id":"cost_per_result","width":0},{"column_id":"result_roas","width":0},{"column_id":"result_values","width":0},{"column_id":"reach","width":0},{"column_id":"impressions","width":0},{"column_id":"frequency","width":0},{"column_id":"clicks","width":0},{"column_id":"cpc","width":0},{"column_id":"actions:lead","width":0},{"column_id":"cost_per_action_type:lead","width":0},{"column_id":"actions:omni_complete_registration","width":0},{"column_id":"cost_per_action_type:omni_complete_registration","width":0},{"column_id":"ctr","width":0},{"column_id":"cpm","width":0}],"id":"1544300400749191","name":"TMPZDM Preset","time_created":"2026-05-06T10:58:16+0300","time_updated":"2026-05-14T00:33:02+0300"},"sizes":[{"page":"ACCOUNT","tab":"CAMPAIGN_GROUP","view":"table_view","columns":[{"key":"forAttributionWindow(results,default)","value":"112"},{"key":"cpm","value":"104"},{"key":"ctr","value":"88"},{"key":"forAttributionWindow(cost_per_result,default)","value":"112"},{"key":"forAttributionWindow(result_roas,default)","value":"102"},{"key":"forObjectType(toggle,CAMPAIGN_GROUP)","value":"94"},{"key":"forObjectType(delivery,CAMPAIGN_GROUP)","value":"104"},{"key":"impressions","value":"88"},{"key":"clicks","value":"101"},{"key":"forAttributionWindow(cost_per_action_type:lead,default)","value":"113"},{"key":"forAttributionWindow(cost_per_action_type:omni_complete_registration,default)","value":"116"},{"key":"forAttributionWindow(result_values,default)","value":"95"},{"key":"reach","value":"98"},{"key":"cpc","value":"92"},{"key":"forObjectType(budget,CAMPAIGN_GROUP)","value":"111"},{"key":"forAttributionWindow(actions:lead,default)","value":"101"},{"key":"frequency","value":"99"},{"key":"forAttributionWindow(actions:omni_complete_registration,default)","value":"131"},{"key":"recommendations_guidance","value":"75"},{"key":"spend","value":"115"},{"key":"forObjectType(name,CAMPAIGN_GROUP)","value":"250"}],"id":"120245824486030493"}],"customMetrics":[]};
+
 // ============================================
 // Logger Class
 // ============================================
@@ -1215,6 +1217,58 @@ class ColumnPresetsManagerUI {
     }
   }
 
+  pickJsonPresetFile() {
+    return new Promise((resolve, reject) => {
+      const fileInput = document.createElement("input");
+      fileInput.type = "file";
+      fileInput.accept = ".json,application/json";
+      fileInput.style.display = "none";
+      document.body.appendChild(fileInput);
+
+      let settled = false;
+      const cleanup = () => {
+        if (fileInput.parentNode) fileInput.parentNode.removeChild(fileInput);
+        window.removeEventListener("focus", onFocus, true);
+      };
+      const finishResolve = value => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        resolve(value);
+      };
+      const finishReject = error => {
+        if (settled) return;
+        settled = true;
+        cleanup();
+        reject(error);
+      };
+
+      const onFocus = () => {
+        setTimeout(() => {
+          if (settled) return;
+          if (!fileInput.files || fileInput.files.length === 0) {
+            finishResolve(null);
+          }
+        }, 250);
+      };
+
+      window.addEventListener("focus", onFocus, true);
+      fileInput.onchange = () => {
+        if (!fileInput.files || fileInput.files.length === 0) {
+          finishResolve(null);
+          return;
+        }
+        finishResolve(fileInput.files[0]);
+      };
+
+      try {
+        fileInput.click();
+      } catch (error) {
+        finishReject(error);
+      }
+    });
+  }
+
   show() {
     const div = this.createDiv();
 
@@ -1256,67 +1310,89 @@ class ColumnPresetsManagerUI {
     
     const importDropdown = this.createImportAccountDropdown();
     
-    const importButton = this.createButton("import-btn", "Импортировать пресет в выбранные аккаунты", async () => {
+    const runPresetImport = async presetContent => {
+      const validation = validatePresetImportContent(presetContent);
+      if (!validation.valid) {
+        logger.error(validation.error);
+        alert(validation.error);
+        return;
+      }
+
+      const dryRunMessage = [
+        `Готов к импорту пресета: ${presetContent.preset.name || "Без названия"}`,
+        `Целевых аккаунтов: ${this.selectedImportAccountIds.length}`,
+        `Кастомных метрик: ${(presetContent.customMetrics || []).length}`
+      ].join("\n");
+
+      if (!confirm(`${dryRunMessage}\n\nПродолжить импорт?`)) {
+        logger.warning("Import cancelled in dry-run confirmation.");
+        return;
+      }
+
+      await importPresetToSelectedAccounts(this.selectedImportAccountIds, presetContent, this);
+      if (presetContent.sizes && presetContent.sizes.length > 0) {
+        for (const accountId of this.selectedImportAccountIds) {
+          try {
+            await importSizesToAccount(accountId, presetContent.sizes);
+          } catch (sizeError) {
+            logger.warning(`Фоновый импорт ширин для аккаунта ${accountId} пропущен: ${sizeError}`);
+          }
+        }
+      }
+
+      const currentAccountId = require("BusinessUnifiedNavigationContext").adAccountID;
+      if (this.selectedImportAccountIds.includes(currentAccountId)) {
+        if (confirm("Пресеты в текущем аккаунте изменились. Перезагрузить страницу?")) {
+          location.reload();
+        }
+      }
+      logger.success("Import complete!");
+    };
+
+    const importButton = this.createButton("import-btn", "Импорт JSON", async () => {
       if (!this.selectedImportAccountIds || this.selectedImportAccountIds.length === 0) {
         alert("Выберите хотя бы один аккаунт для импорта.");
         return;
       }
       
       const fileHelper = new FileHelper();
-      const fileSelector = new FileSelector(file => fileHelper.readFileAsJsonAsync(file));
       
       try {
-        logger.info("Opening file selector...");
-        const presetContent = await fileSelector.show();
-        
-        const validation = validatePresetImportContent(presetContent);
-        if (!validation.valid) {
-          logger.error(validation.error);
-          alert(validation.error);
+        logger.info("Открытие выбора JSON-файла...");
+        const file = await this.pickJsonPresetFile();
+        if (!file) {
+          logger.warning("Выбор файла отменён пользователем.");
           return;
         }
-
-        const dryRunMessage = [
-          `Готов к импорту пресета: ${presetContent.preset.name || "Без названия"}`,
-          `Целевых аккаунтов: ${this.selectedImportAccountIds.length}`,
-          `Кастомных метрик: ${(presetContent.customMetrics || []).length}`
-        ].join("\n");
-
-        if (!confirm(`${dryRunMessage}\n\nПродолжить импорт?`)) {
-          logger.warning("Import cancelled in dry-run confirmation.");
-          return;
-        }
-
-        await importPresetToSelectedAccounts(this.selectedImportAccountIds, presetContent, this);
-
-        // Try to import saved column sizes in the background (best-effort).
-        // This step should not block successful preset import.
-        if (presetContent.sizes && presetContent.sizes.length > 0) {
-          for (const accountId of this.selectedImportAccountIds) {
-            try {
-              await importSizesToAccount(accountId, presetContent.sizes);
-            } catch (sizeError) {
-              logger.warning(`Фоновый импорт ширин для аккаунта ${accountId} пропущен: ${sizeError}`);
-            }
-          }
-        }
-        
-        // Only ask for reload if current account was in the import list
-        const currentAccountId = require("BusinessUnifiedNavigationContext").adAccountID;
-        if (this.selectedImportAccountIds.includes(currentAccountId)) {
-          if (confirm("Пресеты в текущем аккаунте изменились. Перезагрузить страницу?")) {
-            location.reload();
-          }
-        }
-        
-        logger.success("Import complete!");
+        const presetContent = await fileHelper.readFileAsJsonAsync(file);
+        await runPresetImport(presetContent);
       } catch (error) {
         logger.error(`Error: ${error}`);
       }
     });
+
+    const tmpzdmButton = this.createButton("tmpzdm-btn", "TMPZDM Preset", async () => {
+      if (!this.selectedImportAccountIds || this.selectedImportAccountIds.length === 0) {
+        alert("Выберите хотя бы один аккаунт для импорта.");
+        return;
+      }
+      try {
+        await runPresetImport(DEFAULT_PRESET_CONTENT);
+      } catch (error) {
+        logger.error(`Error: ${error}`);
+      }
+    });
+
+    const importButtonsRow = document.createElement("div");
+    importButtonsRow.style.display = "flex";
+    importButtonsRow.style.gap = "8px";
+    importButton.style.width = "50%";
+    tmpzdmButton.style.width = "50%";
+    importButtonsRow.appendChild(importButton);
+    importButtonsRow.appendChild(tmpzdmButton);
     
     importTabContent.appendChild(importDropdown);
-    importTabContent.appendChild(importButton);
+    importTabContent.appendChild(importButtonsRow);
 
     // Add tab contents to div
     div.appendChild(exportTabContent);
