@@ -1117,7 +1117,7 @@ class ColumnPresetsManagerUI {
     importTab.style.padding = "9px";
     importTab.style.border = "none";
     importTab.style.background = "transparent";
-    importTab.style.color = UITheme.accentMuted;
+    importTab.style.color = UITheme.panelText;
     importTab.style.cursor = "pointer";
     importTab.style.fontSize = "13px";
     importTab.style.fontWeight = "700";
