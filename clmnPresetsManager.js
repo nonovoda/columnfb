@@ -2,10 +2,78 @@
 // Configuration
 // ============================================
 const Config = {
-  VERSION: "2025.12.12",
+  VERSION: "2026.05.13",
   API_VERSION: "v23.0",
-  API_URL: "https://adsmanager-graph.facebook.com/v23.0/"
+  API_URL: "https://adsmanager-graph.facebook.com/v23.0/",
+  EXPORT_SCHEMA_VERSION: "2.0.0",
+  RETRY_MAX_ATTEMPTS: 4,
+  RETRY_BASE_DELAY_MS: 600
 };
+
+const UITheme = {
+  fontFamily: "'Inter', 'Segoe UI', Roboto, Arial, sans-serif",
+  panelBg: "linear-gradient(180deg,#061514 0%, #071716 100%)",
+  panelText: "#dce7e3",
+  panelBorder: "1px solid rgba(100,214,168,.22)",
+  panelShadow: "0 14px 32px rgba(0,0,0,.45)",
+  accent: "#43f09b",
+  accentMuted: "#8dcaa7",
+  controlBg: "#0b221d",
+  controlBorder: "1px solid rgba(108,211,171,.30)",
+  controlText: "#d8e6e0",
+  inputBg: "#0a201b",
+  inputBorder: "1px solid rgba(89,223,160,.35)",
+  inputText: "#d7e5df",
+  logBg: "#081a16",
+  logBorder: "1px solid rgba(85,233,165,.24)",
+  logText: "#6dffae"
+};
+
+// ============================================
+// Helpers
+// ============================================
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function normalizeApiError(responseJson, context = "API request") {
+  if (!responseJson || !responseJson.error) return null;
+  const err = responseJson.error;
+  return {
+    message: err.message || `${context} failed`,
+    type: err.type || "GraphApiError",
+    code: err.code,
+    subcode: err.error_subcode,
+    isTransient: Boolean(err.is_transient),
+    fbtrace_id: err.fbtrace_id
+  };
+}
+
+function shouldRetryApiError(apiErr) {
+  if (!apiErr) return false;
+  if (apiErr.isTransient) return true;
+  return [1, 2, 4, 17, 32, 341, 613].includes(apiErr.code);
+}
+
+function validatePresetImportContent(payload) {
+  if (!payload || typeof payload !== "object") {
+    return { valid: false, error: "Invalid JSON: expected object" };
+  }
+  if (!payload.preset || typeof payload.preset !== "object") {
+    return { valid: false, error: "Invalid JSON: missing 'preset' object" };
+  }
+  if (!Array.isArray(payload.preset.columns)) {
+    return { valid: false, error: "Invalid JSON: preset.columns must be an array" };
+  }
+  if (payload.sizes && !Array.isArray(payload.sizes)) {
+    return { valid: false, error: "Invalid JSON: sizes must be an array" };
+  }
+  if (payload.customMetrics && !Array.isArray(payload.customMetrics)) {
+    return { valid: false, error: "Invalid JSON: customMetrics must be an array" };
+  }
+  return { valid: true };
+}
 
 // ============================================
 // Logger Class
@@ -90,7 +158,9 @@ class FileSelector {
     this.div.style.transform = "translate(-50%, -50%)";
     this.div.style.width = "200px";
     this.div.style.height = "120px";
-    this.div.style.backgroundColor = "yellow";
+    this.div.style.background = "linear-gradient(180deg,#041e18,#02110d)";
+    this.div.style.border = "1px solid rgba(83,255,170,.25)";
+    this.div.style.boxShadow = "0 20px 50px rgba(0,0,0,.55), inset 0 0 30px rgba(47,255,156,.06)";
     this.div.style.zIndex = "1001";
     this.div.style.display = "flex";
     this.div.style.flexDirection = "column";
@@ -103,7 +173,9 @@ class FileSelector {
     var title = document.createElement("div");
     title.innerHTML = "Select file to import preset";
     title.style.textAlign = "center";
-    title.style.fontWeight = "bold";
+    title.style.fontWeight = "700";
+    title.style.color = "#e7fff2";
+    title.style.fontSize = "13px";
 
     var closeButton = document.createElement("button");
     closeButton.innerHTML = "X";
@@ -111,7 +183,8 @@ class FileSelector {
     closeButton.style.top = "5px";
     closeButton.style.right = "5px";
     closeButton.style.border = "none";
-    closeButton.style.background = "none";
+    closeButton.style.background = "transparent";
+    closeButton.style.color = "#92d6b3";
     closeButton.style.cursor = "pointer";
     closeButton.onclick = () => {
       document.body.removeChild(this.div);
@@ -131,6 +204,13 @@ class FileSelector {
   createButton() {
     this.button = document.createElement("button");
     this.button.textContent = "Select File";
+    this.button.style.marginTop = "10px";
+    this.button.style.padding = "8px 10px";
+    this.button.style.border = "none";
+    this.button.style.borderRadius = "10px";
+    this.button.style.background = "linear-gradient(180deg,#45ff9c,#23d978)";
+    this.button.style.color = "#042615";
+    this.button.style.fontWeight = "700";
     this.button.onclick = () => {
       this.fileInput.click();
     };
@@ -172,6 +252,35 @@ class FileSelector {
 // ============================================
 class FbApi {
   apiUrl = Config.API_URL;
+  
+  async withRetry(requestFn, context = "API request") {
+    let attempt = 0;
+    let lastError = null;
+    while (attempt < Config.RETRY_MAX_ATTEMPTS) {
+      attempt++;
+      try {
+        const responseJson = await requestFn();
+        const apiErr = normalizeApiError(responseJson, context);
+        if (!apiErr) {
+          return responseJson;
+        }
+        lastError = apiErr;
+        if (!shouldRetryApiError(apiErr) || attempt >= Config.RETRY_MAX_ATTEMPTS) {
+          throw new Error(`${context}: ${apiErr.message} (code ${apiErr.code ?? "n/a"})`);
+        }
+        const delayMs = Config.RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250);
+        logger.warning(`${context} failed (attempt ${attempt}/${Config.RETRY_MAX_ATTEMPTS}). Retrying in ${delayMs}ms...`);
+        await sleep(delayMs);
+      } catch (error) {
+        lastError = error;
+        if (attempt >= Config.RETRY_MAX_ATTEMPTS) throw error;
+        const delayMs = Config.RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250);
+        logger.warning(`${context} network/error on attempt ${attempt}. Retrying in ${delayMs}ms...`);
+        await sleep(delayMs);
+      }
+    }
+    throw lastError ?? new Error(`${context} failed`);
+  }
 
   async getRequest(path, qs = null, token = null) {
     token = token ?? __accessToken;
@@ -187,27 +296,28 @@ class FbApi {
       finalUrl = `${finalUrl}&${qs}`;
     }
     
-    let f = await fetch(finalUrl, {
-      headers: {
-        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "accept-language": "ca-ES,ca;q=0.9,en-US;q=0.8,en;q=0.7",
-        "cache-control": "max-age=0",
-        "sec-ch-ua": '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-      },
-      referrerPolicy: "strict-origin-when-cross-origin",
-      body: null,
-      method: "GET",
-      mode: "cors",
-      credentials: "include",
-      referrer: "https://business.facebook.com/",
-    });
-    let json = await f.json();
-    return json;
+    return this.withRetry(async () => {
+      let f = await fetch(finalUrl, {
+        headers: {
+          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+          "accept-language": "ca-ES,ca;q=0.9,en-US;q=0.8,en;q=0.7",
+          "cache-control": "max-age=0",
+          "sec-ch-ua": '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Windows"',
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "same-site",
+        },
+        referrerPolicy: "strict-origin-when-cross-origin",
+        body: null,
+        method: "GET",
+        mode: "cors",
+        credentials: "include",
+        referrer: "https://business.facebook.com/",
+      });
+      return await f.json();
+    }, `GET ${path}`);
   }
 
   async getAllPages(path, qs, token = null) {
@@ -238,17 +348,18 @@ class FbApi {
       "sec-fetch-site": "same-site",
     };
     let finalUrl = path.startsWith('http') ? path : this.apiUrl + path;
-    let f = await fetch(finalUrl, {
-      headers: headers,
-      referrer: "https://business.facebook.com/",
-      referrerPolicy: "origin-when-cross-origin",
-      body: new URLSearchParams(body).toString(),
-      method: "POST",
-      mode: "cors",
-      credentials: "include",
-    });
-    let json = await f.json();
-    return json;
+    return this.withRetry(async () => {
+      let f = await fetch(finalUrl, {
+        headers: headers,
+        referrer: "https://business.facebook.com/",
+        referrerPolicy: "origin-when-cross-origin",
+        body: new URLSearchParams(body).toString(),
+        method: "POST",
+        mode: "cors",
+        credentials: "include",
+      });
+      return await f.json();
+    }, `POST ${path}`);
   }
 }
 
@@ -411,6 +522,13 @@ async function exportColumnPreset(selectedPreset, sizes = [], accountId = null) 
   }
 
   const jsFile = {
+    schemaVersion: Config.EXPORT_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    source: {
+      accountId: accountId ?? require("BusinessUnifiedNavigationContext").adAccountID,
+      apiVersion: Config.API_VERSION,
+      toolVersion: Config.VERSION
+    },
     preset: selectedPreset,
     sizes: sizes,
     customMetrics: []
@@ -509,10 +627,27 @@ async function importPresetToAccount(accountId, presetContent) {
       logger.info(`Creating ${presetContent.customMetrics.length} custom metric(s) on account ${accountId}...`);
       
       const idMapping = {};
+      const existingMetrics = await fetchCustomMetrics(accountId);
+      const metricsByFingerprint = new Map();
+      for (const m of existingMetrics) {
+        const key = `${m.name}||${m.formula}||${m.format_type || "FLOAT"}`;
+        metricsByFingerprint.set(key, m.id);
+      }
+
       for (const metric of presetContent.customMetrics) {
+        const fingerprint = `${metric.name}||${metric.formula}||${metric.format_type || "FLOAT"}`;
+        const existingId = metricsByFingerprint.get(fingerprint);
+
+        if (existingId) {
+          idMapping[metric.id] = existingId;
+          logger.info(`Metric "${metric.name}" already exists, reusing ID ${existingId}`);
+          continue;
+        }
+
         const newId = await createCustomMetric(accountId, metric);
         if (newId) {
           idMapping[metric.id] = newId;
+          metricsByFingerprint.set(fingerprint, newId);
         } else {
           logger.warning(`Skipping metric "${metric.name}" - creation failed`);
         }
@@ -604,7 +739,9 @@ class ColumnPresetsManagerUI {
     this.div.style.width = "400px";
     this.div.style.maxHeight = "90vh";
     this.div.style.overflowY = "auto";
-    this.div.style.backgroundColor = "yellow";
+    this.div.style.background = UITheme.panelBg;
+    this.div.style.color = UITheme.panelText;
+    this.div.style.border = UITheme.panelBorder;
     this.div.style.zIndex = "1000";
     this.div.style.display = "flex";
     this.div.style.flexDirection = "column";
@@ -612,24 +749,28 @@ class ColumnPresetsManagerUI {
     this.div.style.justifyContent = "flex-start";
     this.div.style.padding = "20px";
     this.div.style.boxSizing = "border-box";
-    this.div.style.borderRadius = "10px";
-    this.div.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+    this.div.style.borderRadius = "14px";
+    this.div.style.boxShadow = UITheme.panelShadow;
+    this.div.style.fontFamily = UITheme.fontFamily;
 
     // Create and style the title
     const title = document.createElement("div");
-    title.innerHTML = `<h2>FB Column Preset Manager ${Config.VERSION}</h2><p><a href='https://yellowweb.top' target='_blank'>by Yellow Web</a></p>`;
-    title.style.textAlign = "center";
-    title.style.marginBottom = "20px";
+    title.innerHTML = `<h2 style="margin:0 0 4px 0;font-size:46px;line-height:.92;color:${UITheme.accent};font-weight:800;letter-spacing:-.6px;">FB Preset Manager</h2><p style="opacity:.78;margin:0;font-size:18px;font-weight:600;">v ${Config.VERSION}</p>`;
+    title.style.textAlign = "left";
+    title.style.width = "100%";
+    title.style.marginBottom = "16px";
 
     // Create and style the close button
     const closeButton = document.createElement("button");
     closeButton.innerHTML = "X";
     closeButton.style.position = "absolute";
-    closeButton.style.top = "10px";
-    closeButton.style.right = "10px";
+    closeButton.style.top = "12px";
+    closeButton.style.right = "12px";
     closeButton.style.border = "none";
-    closeButton.style.background = "none";
-    closeButton.style.fontSize = "18px";
+    closeButton.style.background = "transparent";
+    closeButton.style.color = UITheme.controlText;
+    closeButton.style.fontSize = "24px";
+    closeButton.style.fontWeight = "700";
     closeButton.style.cursor = "pointer";
     closeButton.onclick = () => {
       document.body.removeChild(this.div);
@@ -645,15 +786,16 @@ class ColumnPresetsManagerUI {
     const button = document.createElement("button");
     button.id = id;
     button.textContent = text;
-    button.style.margin = "10px 0";
-    button.style.padding = "10px 15px";
+    button.style.margin = "8px 0";
+    button.style.padding = "12px 15px";
     button.style.width = "100%";
-    button.style.backgroundColor = "#4CAF50";
-    button.style.color = "white";
-    button.style.border = "none";
-    button.style.borderRadius = "5px";
+    button.style.background = UITheme.controlBg;
+    button.style.color = UITheme.controlText;
+    button.style.border = UITheme.controlBorder;
+    button.style.borderRadius = "12px";
     button.style.cursor = "pointer";
     button.style.fontSize = "16px";
+    button.style.fontWeight = "700";
     button.setAttribute("data-original-text", text);
     
     this.buttons[id] = button;
@@ -676,9 +818,9 @@ class ColumnPresetsManagerUI {
     
     if (isLoading) {
       button.disabled = true;
-      button.style.opacity = "0.7";
+      button.style.opacity = "0.72";
       button.style.cursor = "not-allowed";
-      button.textContent = "Working on it...";
+      button.textContent = "Processing...";
     } else {
       button.disabled = false;
       button.style.opacity = "1";
@@ -693,23 +835,26 @@ class ColumnPresetsManagerUI {
     container.style.margin = "10px 0";
     
     const label = document.createElement("label");
-    label.textContent = "Select account to export from:";
+    label.textContent = "Аккаунт для экспорта:";
     label.style.display = "block";
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
-    label.style.fontWeight = "bold";
+    label.style.color = UITheme.panelText;
+    label.style.fontWeight = "700";
     
     const select = document.createElement("select");
     select.id = "ywbExportAccountSelect";
     select.style.width = "100%";
-    select.style.padding = "8px";
-    select.style.borderRadius = "5px";
-    select.style.border = "1px solid #ccc";
-    select.style.fontSize = "14px";
+    select.style.padding = "11px 12px";
+    select.style.borderRadius = "12px";
+    select.style.border = UITheme.inputBorder;
+    select.style.background = UITheme.inputBg;
+    select.style.color = UITheme.inputText;
+    select.style.fontSize = "16px";
     
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "-- Choose an account --";
+    defaultOption.textContent = "-- Выберите аккаунт --";
     defaultOption.disabled = true;
     defaultOption.selected = true;
     select.appendChild(defaultOption);
@@ -754,7 +899,7 @@ class ColumnPresetsManagerUI {
     container.style.margin = "10px 0";
     
     const label = document.createElement("label");
-    label.textContent = "Select preset to export:";
+    label.textContent = "Пресет для экспорта:";
     label.style.display = "block";
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
@@ -763,14 +908,16 @@ class ColumnPresetsManagerUI {
     const select = document.createElement("select");
     select.id = "ywbPresetSelect";
     select.style.width = "100%";
-    select.style.padding = "8px";
-    select.style.borderRadius = "5px";
-    select.style.border = "1px solid #ccc";
-    select.style.fontSize = "14px";
+    select.style.padding = "11px 12px";
+    select.style.borderRadius = "12px";
+    select.style.border = UITheme.inputBorder;
+    select.style.background = UITheme.inputBg;
+    select.style.color = UITheme.inputText;
+    select.style.fontSize = "16px";
     
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "-- Select account first --";
+    defaultOption.textContent = "-- Сначала выберите аккаунт --";
     defaultOption.disabled = true;
     defaultOption.selected = true;
     select.appendChild(defaultOption);
@@ -802,14 +949,14 @@ class ColumnPresetsManagerUI {
     defaultOption.selected = true;
     
     if (this.accountPresets.length === 0) {
-      defaultOption.textContent = this.selectedExportAccountId 
-        ? "-- No presets available --" 
-        : "-- Select account first --";
+      defaultOption.textContent = this.selectedExportAccountId
+        ? "-- Пресеты не найдены --"
+        : "-- Сначала выберите аккаунт --";
       select.appendChild(defaultOption);
       return;
     }
     
-    defaultOption.textContent = "-- Choose a preset --";
+    defaultOption.textContent = "-- Выберите пресет --";
     select.appendChild(defaultOption);
     
     this.accountPresets.forEach((preset, index) => {
@@ -826,7 +973,7 @@ class ColumnPresetsManagerUI {
     container.style.margin = "10px 0";
     
     const label = document.createElement("label");
-    label.textContent = "Select accounts to import to:";
+    label.textContent = "Аккаунты для импорта:";
     label.style.display = "block";
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
@@ -842,7 +989,7 @@ class ColumnPresetsManagerUI {
     
     const selectAllLabel = document.createElement("label");
     selectAllLabel.htmlFor = "ywbSelectAllAccounts";
-    selectAllLabel.textContent = "Select All Accounts";
+    selectAllLabel.textContent = "Выбрать все аккаунты";
     selectAllLabel.style.fontSize = "14px";
     
     selectAllContainer.appendChild(selectAllCheckbox);
@@ -851,7 +998,7 @@ class ColumnPresetsManagerUI {
     const select = document.createElement("select");
     select.id = "ywbImportAccountSelect";
     select.multiple = true;
-    select.size = Math.min(allAccountsData.length, 8);
+    select.size = Math.min(allAccountsData.length, 6);
     select.style.width = "100%";
     select.style.padding = "5px";
     select.style.borderRadius = "5px";
@@ -933,41 +1080,43 @@ class ColumnPresetsManagerUI {
     const tabContainer = document.createElement("div");
     tabContainer.style.display = "flex";
     tabContainer.style.width = "100%";
-    tabContainer.style.marginBottom = "15px";
-    tabContainer.style.borderBottom = "2px solid #333";
+    tabContainer.style.marginBottom = "12px";
+    tabContainer.style.borderBottom = UITheme.controlBorder;
     
     const exportTab = document.createElement("button");
     exportTab.id = "ywbExportTab";
-    exportTab.textContent = "Export";
+    exportTab.textContent = "Экспорт";
     exportTab.style.flex = "1";
-    exportTab.style.padding = "10px";
+    exportTab.style.padding = "8px";
     exportTab.style.border = "none";
-    exportTab.style.background = "none";
+    exportTab.style.background = "transparent";
     exportTab.style.cursor = "pointer";
     exportTab.style.fontSize = "14px";
     exportTab.style.fontWeight = "bold";
-    exportTab.style.borderBottom = "3px solid #333";
+    exportTab.style.borderBottom = `3px solid ${UITheme.accent}`;
+    exportTab.style.color = UITheme.panelText;
     
     const importTab = document.createElement("button");
     importTab.id = "ywbImportTab";
-    importTab.textContent = "Import";
+    importTab.textContent = "Импорт";
     importTab.style.flex = "1";
-    importTab.style.padding = "10px";
+    importTab.style.padding = "8px";
     importTab.style.border = "none";
-    importTab.style.background = "none";
+    importTab.style.background = "transparent";
+    importTab.style.color = UITheme.accentMuted;
     importTab.style.cursor = "pointer";
     importTab.style.fontSize = "14px";
     importTab.style.fontWeight = "bold";
     
     exportTab.onclick = () => {
-      exportTab.style.borderBottom = "3px solid #333";
+      exportTab.style.borderBottom = `3px solid ${UITheme.accent}`;
       importTab.style.borderBottom = "none";
       document.getElementById("ywbExportTabContent").style.display = "block";
       document.getElementById("ywbImportTabContent").style.display = "none";
     };
     
     importTab.onclick = () => {
-      importTab.style.borderBottom = "3px solid #333";
+      importTab.style.borderBottom = `3px solid ${UITheme.accent}`;
       exportTab.style.borderBottom = "none";
       document.getElementById("ywbExportTabContent").style.display = "none";
       document.getElementById("ywbImportTabContent").style.display = "block";
@@ -983,27 +1132,28 @@ class ColumnPresetsManagerUI {
     const logContainer = document.createElement("div");
     logContainer.style.width = "100%";
     logContainer.style.marginTop = "15px";
-    logContainer.style.borderTop = "2px solid #333";
+    logContainer.style.borderTop = UITheme.controlBorder;
     logContainer.style.paddingTop = "10px";
     
     const logLabel = document.createElement("div");
-    logLabel.textContent = "Log:";
-    logLabel.style.fontSize = "12px";
+    logLabel.textContent = "Лог обработки:";
+    logLabel.style.fontSize = "13px";
     logLabel.style.fontWeight = "bold";
     logLabel.style.marginBottom = "5px";
     
     this.logArea = document.createElement("div");
     this.logArea.id = "ywbLogArea";
     this.logArea.style.width = "100%";
-    this.logArea.style.height = "120px";
+    this.logArea.style.height = "140px";
     this.logArea.style.overflowY = "auto";
-    this.logArea.style.backgroundColor = "#f5f5f5";
-    this.logArea.style.border = "1px solid #ccc";
-    this.logArea.style.borderRadius = "5px";
-    this.logArea.style.padding = "8px";
-    this.logArea.style.fontSize = "11px";
+    this.logArea.style.backgroundColor = UITheme.logBg;
+    this.logArea.style.border = UITheme.logBorder;
+    this.logArea.style.borderRadius = "10px";
+    this.logArea.style.padding = "10px";
+    this.logArea.style.fontSize = "12px";
     this.logArea.style.fontFamily = "monospace";
     this.logArea.style.lineHeight = "1.4";
+    this.logArea.style.color = UITheme.logText;
     
     logContainer.appendChild(logLabel);
     logContainer.appendChild(this.logArea);
@@ -1051,13 +1201,13 @@ class ColumnPresetsManagerUI {
     const exportDropdown = this.createExportAccountDropdown();
     const presetDropdown = this.createPresetDropdown();
     
-    const exportButton = this.createButton("export-btn", "Export Column Preset to JSON", async () => {
+    const exportButton = this.createButton("export-btn", "Скачать пресет в JSON", async () => {
       if (!this.selectedExportAccountId) {
-        alert("Please select an account to export from.");
+        alert("Выберите аккаунт для экспорта.");
         return;
       }
       if (!this.selectedPreset) {
-        alert("Please select a preset to export.");
+        alert("Выберите пресет для экспорта.");
         return;
       }
       await exportColumnPreset(this.selectedPreset, this.accountSizes, this.selectedExportAccountId);
@@ -1088,15 +1238,15 @@ class ColumnPresetsManagerUI {
     
     const sizesLabel = document.createElement("label");
     sizesLabel.htmlFor = "ywbImportSizes";
-    sizesLabel.textContent = "Also import column sizes";
+    sizesLabel.textContent = "Также импортировать ширины колонок";
     sizesLabel.style.fontSize = "14px";
     
     importSizesCheckbox.appendChild(sizesCheckbox);
     importSizesCheckbox.appendChild(sizesLabel);
     
-    const importButton = this.createButton("import-btn", "Import Column Preset to Selected Accounts", async () => {
+    const importButton = this.createButton("import-btn", "Импортировать пресет в выбранные аккаунты", async () => {
       if (!this.selectedImportAccountIds || this.selectedImportAccountIds.length === 0) {
-        alert("Please select at least one account to import to.");
+        alert("Выберите хотя бы один аккаунт для импорта.");
         return;
       }
       
@@ -1107,11 +1257,25 @@ class ColumnPresetsManagerUI {
         logger.info("Opening file selector...");
         const presetContent = await fileSelector.show();
         
-        if (!presetContent || !presetContent.preset) {
-          logger.error("Invalid file format. Expected a JSON file with 'preset' object.");
+        const validation = validatePresetImportContent(presetContent);
+        if (!validation.valid) {
+          logger.error(validation.error);
+          alert(validation.error);
           return;
         }
-        
+
+        const dryRunMessage = [
+          `Ready to import preset: ${presetContent.preset.name || "Unnamed"}`,
+          `Target accounts: ${this.selectedImportAccountIds.length}`,
+          `Custom metrics: ${(presetContent.customMetrics || []).length}`,
+          `Column sizes: ${(presetContent.sizes || []).length}`
+        ].join("\n");
+
+        if (!confirm(`${dryRunMessage}\n\nContinue import?`)) {
+          logger.warning("Import cancelled in dry-run confirmation.");
+          return;
+        }
+
         await importPresetToSelectedAccounts(this.selectedImportAccountIds, presetContent, this);
         
         // Import sizes if checkbox is checked
