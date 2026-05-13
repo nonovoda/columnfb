@@ -793,7 +793,7 @@ class ColumnPresetsManagerUI {
     button.style.padding = "12px 15px";
     button.style.width = "100%";
     button.style.background = "linear-gradient(180deg, #4DFF8F 0%, #00FF66 100%)";
-    button.style.color = UITheme.controlText;
+    button.style.color = "#052614";
     button.style.border = "1px solid rgba(77,255,143,.6)";
     button.style.borderRadius = "12px";
     button.style.cursor = "pointer";
@@ -1330,12 +1330,16 @@ class ColumnPresetsManagerUI {
     copyBookmarkLink.href = "#";
     copyBookmarkLink.textContent = "Скопировать как bookmark";
     copyBookmarkLink.style.fontSize = "12px";
-    copyBookmarkLink.style.color = UITheme.accentMuted;
-    copyBookmarkLink.style.textDecoration = "underline";
+    copyBookmarkLink.style.color = UITheme.panelText;
+    copyBookmarkLink.style.textDecoration = "none";
     copyBookmarkLink.style.cursor = "pointer";
     copyBookmarkLink.style.marginTop = "10px";
     copyBookmarkLink.style.display = "block";
     copyBookmarkLink.style.textAlign = "center";
+    copyBookmarkLink.style.background = UITheme.controlBg;
+    copyBookmarkLink.style.border = UITheme.controlBorder;
+    copyBookmarkLink.style.borderRadius = "10px";
+    copyBookmarkLink.style.padding = "10px 12px";
     copyBookmarkLink.onclick = (e) => {
       e.preventDefault();
       copyScriptAsBase64Bookmarklet();

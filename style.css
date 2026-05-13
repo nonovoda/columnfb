@@ -1,0 +1,31 @@
+:root {
+  --fb-bg-0: #060B0A;
+  --fb-bg-1: #09110F;
+  --fb-bg-2: #0D1513;
+  --fb-surface-0: rgba(13, 21, 19, 0.86);
+  --fb-surface-1: rgba(9, 17, 15, 0.94);
+  --fb-accent-0: #4DFF8F;
+  --fb-accent-1: #00FF66;
+  --fb-text-primary: #E9FFEF;
+  --fb-text-secondary: #9EB7A7;
+  --fb-text-muted: #7C9387;
+  --fb-error: #FF7676;
+}
+
+.fbpm-panel {
+  background: linear-gradient(180deg, var(--fb-bg-1) 0%, var(--fb-bg-0) 100%);
+  border: 1px solid rgba(158,183,167,.22);
+  box-shadow: 0 18px 40px rgba(0,0,0,.55), inset 0 0 28px rgba(77,255,143,.05);
+  border-radius: 16px;
+  color: var(--fb-text-primary);
+}
+
+.fbpm-primary {
+  background: linear-gradient(180deg, var(--fb-accent-0) 0%, var(--fb-accent-1) 100%);
+  border: 1px solid rgba(77,255,143,.65);
+  color: #052614;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  box-shadow: 0 10px 24px rgba(0,255,102,.22);
+}
