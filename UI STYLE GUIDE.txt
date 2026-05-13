@@ -1,0 +1,212 @@
+# UI STYLE GUIDE — FB TOOLING ECOSYSTEM
+
+Создавай интерфейсы в едином фирменном стиле internal tooling platform для Facebook Ads Manager.
+
+## Общий стиль
+
+Минималистичный dark-tech интерфейс с ощущением premium internal tool для media buyers и арбитражников.
+
+Интерфейс должен выглядеть:
+
+* технологично;
+* чисто;
+* быстро;
+* функционально;
+* минималистично;
+* как приватный профессиональный инструмент.
+
+Избегать:
+
+* corporate SaaS стиля;
+* Web3/cyberpunk перегруза;
+* кислотных цветов;
+* gaming UI;
+* ярких иллюстраций;
+* сложных декоративных элементов.
+
+---
+
+# Цветовая палитра
+
+## Background
+
+* #060B0A
+* #09110F
+* #0D1513
+
+## Surface
+
+* rgba(13,21,19,0.86)
+* rgba(9,17,15,0.94)
+
+## Accent
+
+* #4DFF8F
+* #00FF66
+
+## Text
+
+Primary:
+
+* #E9FFEF
+
+Secondary:
+
+* #9EB7A7
+
+Muted:
+
+* #7C9387
+
+## Error
+
+* #FF7676
+* #FF4F4F
+
+---
+
+# Типографика
+
+Использовать максимум 2 шрифта.
+
+## Заголовки
+
+Шрифт:
+
+* Space Grotesk
+
+Стиль:
+
+* uppercase;
+* medium/bold;
+* увеличенный letter-spacing;
+* компактные заголовки.
+
+## Основной текст
+
+Шрифт:
+
+* Inter
+
+Допускается вариативность только через:
+
+* font-weight;
+* opacity;
+* size.
+
+Не использовать:
+
+* более 2 шрифтов;
+* декоративные шрифты;
+* курсивы;
+* heavy gradients в тексте.
+
+---
+
+# Язык интерфейса
+
+Все элементы интерфейса должны быть на русском языке.
+
+На английском допустимо:
+
+* названия инструментов;
+* названия брендов;
+* технические термины без адекватного русского аналога.
+
+Все:
+
+* кнопки;
+* статусы;
+* модалки;
+* уведомления;
+* onboarding;
+* helper text;
+* placeholders;
+
+должны быть на русском.
+
+---
+
+# Компоненты
+
+## Карточки
+
+* rounded corners 12–20px;
+* dark semi-transparent surface;
+* subtle border;
+* soft glow;
+* лёгкий hover lift.
+
+## Кнопки
+
+Primary:
+
+* яркий зелёный gradient;
+* bold text;
+* glow effect.
+
+Secondary:
+
+* dark surface;
+* muted border;
+* минималистичный вид.
+
+## Inputs
+
+* dark terminal style;
+* зелёный focus glow;
+* clean borders;
+* без лишних теней.
+
+---
+
+# Motion
+
+Разрешены:
+
+* fade;
+* soft hover;
+* subtle glow;
+* лёгкий lift.
+
+Запрещены:
+
+* bounce;
+* aggressive animation;
+* gaming FX;
+* длинные transition.
+
+Transition timing:
+150–220ms.
+
+---
+
+# Layout
+
+Интерфейс должен выглядеть как:
+
+* internal dashboard;
+* control panel;
+* utility console.
+
+Использовать:
+
+* много воздуха;
+* аккуратные отступы;
+* grid layouts;
+* компактные панели.
+
+Избегать:
+
+* giant cards;
+* пустого oversized UI;
+* mobile-app aesthetic.
+
+---
+
+# Общий визуальный вайб
+
+Dark Matte + Neon Green + Premium Internal Tooling
+
+Интерфейс должен создавать ощущение:
+«приватного профессионального инструмента для media buyers».
