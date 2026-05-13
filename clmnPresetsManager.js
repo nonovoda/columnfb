@@ -859,7 +859,7 @@ class ColumnPresetsManagerUI {
     
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "-- Выберите аккаунт --";
+    defaultOption.textContent = "Выберите аккаунт";
     defaultOption.disabled = true;
     defaultOption.selected = true;
     select.appendChild(defaultOption);
@@ -923,7 +923,7 @@ class ColumnPresetsManagerUI {
     
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "-- Сначала выберите аккаунт --";
+    defaultOption.textContent = "Сначала выберите аккаунт";
     defaultOption.disabled = true;
     defaultOption.selected = true;
     select.appendChild(defaultOption);
@@ -956,13 +956,13 @@ class ColumnPresetsManagerUI {
     
     if (this.accountPresets.length === 0) {
       defaultOption.textContent = this.selectedExportAccountId
-        ? "-- Пресеты не найдены --"
-        : "-- Сначала выберите аккаунт --";
+        ? "Пресеты не найдены"
+        : "Сначала выберите аккаунт";
       select.appendChild(defaultOption);
       return;
     }
     
-    defaultOption.textContent = "-- Выберите пресет --";
+    defaultOption.textContent = "Выберите пресет";
     select.appendChild(defaultOption);
     
     this.accountPresets.forEach((preset, index) => {
@@ -1146,6 +1146,9 @@ class ColumnPresetsManagerUI {
     const logContainer = document.createElement("div");
     logContainer.style.width = "100%";
     logContainer.style.marginTop = "10px";
+    logContainer.style.marginLeft = "auto";
+    logContainer.style.marginRight = "auto";
+    logContainer.style.boxSizing = "border-box";
     
     const logLabel = document.createElement("div");
     logLabel.textContent = "Лог обработки:";
@@ -1157,7 +1160,7 @@ class ColumnPresetsManagerUI {
     this.logArea = document.createElement("div");
     this.logArea.id = "ywbLogArea";
     this.logArea.style.width = "100%";
-    this.logArea.style.height = "320px";
+    this.logArea.style.minHeight = "120px";
     this.logArea.style.maxHeight = "320px";
     this.logArea.style.overflowY = "auto";
     this.logArea.style.backgroundColor = UITheme.logBg;
@@ -1190,12 +1193,21 @@ class ColumnPresetsManagerUI {
     }
     
     this.logArea.appendChild(logEntry);
+    this.updateLogAreaHeight();
     this.logArea.scrollTop = this.logArea.scrollHeight;
   }
   
+  updateLogAreaHeight() {
+    if (!this.logArea) return;
+    this.logArea.style.height = "auto";
+    const nextHeight = Math.min(this.logArea.scrollHeight + 4, 320);
+    this.logArea.style.height = `${Math.max(nextHeight, 120)}px`;
+  }
+
   clearLog() {
     if (this.logArea) {
       this.logArea.innerHTML = "";
+      this.updateLogAreaHeight();
     }
   }
 
