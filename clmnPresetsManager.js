@@ -137,22 +137,26 @@ class FileSelector {
     this.div.style.top = "50%";
     this.div.style.left = "50%";
     this.div.style.transform = "translate(-50%, -50%)";
-    this.div.style.width = "200px";
-    this.div.style.height = "120px";
-    this.div.style.backgroundColor = "yellow";
+    this.div.style.width = "340px";
+    this.div.style.minHeight = "180px";
+    this.div.style.background = "linear-gradient(180deg,#041e18,#02110d)";
+    this.div.style.border = "1px solid rgba(83,255,170,.25)";
+    this.div.style.boxShadow = "0 20px 50px rgba(0,0,0,.55), inset 0 0 30px rgba(47,255,156,.06)";
     this.div.style.zIndex = "1001";
     this.div.style.display = "flex";
     this.div.style.flexDirection = "column";
     this.div.style.alignItems = "center";
     this.div.style.justifyContent = "center";
-    this.div.style.padding = "10px";
+    this.div.style.padding = "18px";
     this.div.style.boxSizing = "border-box";
-    this.div.style.borderRadius = "10px";
+    this.div.style.borderRadius = "16px";
 
     var title = document.createElement("div");
     title.innerHTML = "Select file to import preset";
     title.style.textAlign = "center";
-    title.style.fontWeight = "bold";
+    title.style.fontWeight = "700";
+    title.style.color = "#e7fff2";
+    title.style.fontSize = "16px";
 
     var closeButton = document.createElement("button");
     closeButton.innerHTML = "X";
@@ -160,7 +164,8 @@ class FileSelector {
     closeButton.style.top = "5px";
     closeButton.style.right = "5px";
     closeButton.style.border = "none";
-    closeButton.style.background = "none";
+    closeButton.style.background = "transparent";
+    closeButton.style.color = "#92d6b3";
     closeButton.style.cursor = "pointer";
     closeButton.onclick = () => {
       document.body.removeChild(this.div);
@@ -180,6 +185,13 @@ class FileSelector {
   createButton() {
     this.button = document.createElement("button");
     this.button.textContent = "Select File";
+    this.button.style.marginTop = "16px";
+    this.button.style.padding = "10px 14px";
+    this.button.style.border = "none";
+    this.button.style.borderRadius = "10px";
+    this.button.style.background = "linear-gradient(180deg,#45ff9c,#23d978)";
+    this.button.style.color = "#042615";
+    this.button.style.fontWeight = "700";
     this.button.onclick = () => {
       this.fileInput.click();
     };
@@ -705,10 +717,12 @@ class ColumnPresetsManagerUI {
     this.div.style.top = "50%";
     this.div.style.left = "50%";
     this.div.style.transform = "translate(-50%, -50%)";
-    this.div.style.width = "400px";
+    this.div.style.width = "860px";
     this.div.style.maxHeight = "90vh";
     this.div.style.overflowY = "auto";
-    this.div.style.backgroundColor = "yellow";
+    this.div.style.background = "radial-gradient(circle at 20% 0%, #053326 0%, #02150f 58%, #010c09 100%)";
+    this.div.style.color = "#dcfff0";
+    this.div.style.border = "1px solid rgba(81,247,164,.20)";
     this.div.style.zIndex = "1000";
     this.div.style.display = "flex";
     this.div.style.flexDirection = "column";
@@ -716,12 +730,12 @@ class ColumnPresetsManagerUI {
     this.div.style.justifyContent = "flex-start";
     this.div.style.padding = "20px";
     this.div.style.boxSizing = "border-box";
-    this.div.style.borderRadius = "10px";
-    this.div.style.boxShadow = "0 4px 8px rgba(0, 0, 0, 0.2)";
+    this.div.style.borderRadius = "24px";
+    this.div.style.boxShadow = "0 30px 80px rgba(0,0,0,.55), inset 0 0 60px rgba(63,255,159,.05)";
 
     // Create and style the title
     const title = document.createElement("div");
-    title.innerHTML = `<h2>FB Column Preset Manager ${Config.VERSION}</h2><p><a href='https://yellowweb.top' target='_blank'>by Yellow Web</a></p>`;
+    title.innerHTML = `<div style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(84,255,169,.35);font-size:12px;font-weight:700;letter-spacing:.5px;color:#59ffab;margin-bottom:8px;">META ADS PRESET HELPER</div><h2 style="margin:6px 0 8px 0;font-size:48px;line-height:1.05;">Column Preset Manager</h2><p style="opacity:.85;margin:0;">v${Config.VERSION} • by <a href='https://yellowweb.top' target='_blank' style='color:#8ce7bd'>Yellow Web</a></p>`;
     title.style.textAlign = "center";
     title.style.marginBottom = "20px";
 
@@ -732,7 +746,8 @@ class ColumnPresetsManagerUI {
     closeButton.style.top = "10px";
     closeButton.style.right = "10px";
     closeButton.style.border = "none";
-    closeButton.style.background = "none";
+    closeButton.style.background = "transparent";
+    closeButton.style.color = "#9bdab9";
     closeButton.style.fontSize = "18px";
     closeButton.style.cursor = "pointer";
     closeButton.onclick = () => {
@@ -752,12 +767,13 @@ class ColumnPresetsManagerUI {
     button.style.margin = "10px 0";
     button.style.padding = "10px 15px";
     button.style.width = "100%";
-    button.style.backgroundColor = "#4CAF50";
-    button.style.color = "white";
+    button.style.background = "linear-gradient(180deg,#48ffa0,#20d676)";
+    button.style.color = "#032313";
     button.style.border = "none";
-    button.style.borderRadius = "5px";
+    button.style.borderRadius = "12px";
     button.style.cursor = "pointer";
-    button.style.fontSize = "16px";
+    button.style.fontSize = "15px";
+    button.style.fontWeight = "700";
     button.setAttribute("data-original-text", text);
     
     this.buttons[id] = button;
@@ -780,9 +796,9 @@ class ColumnPresetsManagerUI {
     
     if (isLoading) {
       button.disabled = true;
-      button.style.opacity = "0.7";
+      button.style.opacity = "0.75";
       button.style.cursor = "not-allowed";
-      button.textContent = "Working on it...";
+      button.textContent = "Processing...";
     } else {
       button.disabled = false;
       button.style.opacity = "1";
@@ -801,14 +817,17 @@ class ColumnPresetsManagerUI {
     label.style.display = "block";
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
+    label.style.color = "#dff8ea";
     label.style.fontWeight = "bold";
     
     const select = document.createElement("select");
     select.id = "ywbExportAccountSelect";
     select.style.width = "100%";
     select.style.padding = "8px";
-    select.style.borderRadius = "5px";
-    select.style.border = "1px solid #ccc";
+    select.style.borderRadius = "10px";
+    select.style.border = "1px solid rgba(89,223,160,.35)";
+    select.style.background = "#041b14";
+    select.style.color = "#e6fff3";
     select.style.fontSize = "14px";
     
     const defaultOption = document.createElement("option");
@@ -1038,7 +1057,7 @@ class ColumnPresetsManagerUI {
     tabContainer.style.display = "flex";
     tabContainer.style.width = "100%";
     tabContainer.style.marginBottom = "15px";
-    tabContainer.style.borderBottom = "2px solid #333";
+    tabContainer.style.borderBottom = "1px solid rgba(98,236,174,.24)";
     
     const exportTab = document.createElement("button");
     exportTab.id = "ywbExportTab";
@@ -1046,11 +1065,12 @@ class ColumnPresetsManagerUI {
     exportTab.style.flex = "1";
     exportTab.style.padding = "10px";
     exportTab.style.border = "none";
-    exportTab.style.background = "none";
+    exportTab.style.background = "transparent";
     exportTab.style.cursor = "pointer";
     exportTab.style.fontSize = "14px";
     exportTab.style.fontWeight = "bold";
-    exportTab.style.borderBottom = "3px solid #333";
+    exportTab.style.borderBottom = "3px solid #4dffa7";
+    exportTab.style.color = "#d9ffeb";
     
     const importTab = document.createElement("button");
     importTab.id = "ywbImportTab";
@@ -1058,20 +1078,21 @@ class ColumnPresetsManagerUI {
     importTab.style.flex = "1";
     importTab.style.padding = "10px";
     importTab.style.border = "none";
-    importTab.style.background = "none";
+    importTab.style.background = "transparent";
+    importTab.style.color = "#8dcaa7";
     importTab.style.cursor = "pointer";
     importTab.style.fontSize = "14px";
     importTab.style.fontWeight = "bold";
     
     exportTab.onclick = () => {
-      exportTab.style.borderBottom = "3px solid #333";
+      exportTab.style.borderBottom = "3px solid #4dffa7";
       importTab.style.borderBottom = "none";
       document.getElementById("ywbExportTabContent").style.display = "block";
       document.getElementById("ywbImportTabContent").style.display = "none";
     };
     
     importTab.onclick = () => {
-      importTab.style.borderBottom = "3px solid #333";
+      importTab.style.borderBottom = "3px solid #4dffa7";
       exportTab.style.borderBottom = "none";
       document.getElementById("ywbExportTabContent").style.display = "none";
       document.getElementById("ywbImportTabContent").style.display = "block";
@@ -1087,7 +1108,7 @@ class ColumnPresetsManagerUI {
     const logContainer = document.createElement("div");
     logContainer.style.width = "100%";
     logContainer.style.marginTop = "15px";
-    logContainer.style.borderTop = "2px solid #333";
+    logContainer.style.borderTop = "1px solid rgba(98,236,174,.24)";
     logContainer.style.paddingTop = "10px";
     
     const logLabel = document.createElement("div");
@@ -1101,13 +1122,14 @@ class ColumnPresetsManagerUI {
     this.logArea.style.width = "100%";
     this.logArea.style.height = "120px";
     this.logArea.style.overflowY = "auto";
-    this.logArea.style.backgroundColor = "#f5f5f5";
-    this.logArea.style.border = "1px solid #ccc";
-    this.logArea.style.borderRadius = "5px";
+    this.logArea.style.backgroundColor = "#02130d";
+    this.logArea.style.border = "1px solid rgba(85,233,165,.24)";
+    this.logArea.style.borderRadius = "12px";
     this.logArea.style.padding = "8px";
-    this.logArea.style.fontSize = "11px";
+    this.logArea.style.fontSize = "12px";
     this.logArea.style.fontFamily = "monospace";
     this.logArea.style.lineHeight = "1.4";
+    this.logArea.style.color = "#6dffae";
     
     logContainer.appendChild(logLabel);
     logContainer.appendChild(this.logArea);
