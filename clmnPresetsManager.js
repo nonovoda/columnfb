@@ -741,9 +741,8 @@ class ColumnPresetsManagerUI {
     this.div.style.left = "50%";
     this.div.style.transform = "translate(-50%, -50%)";
     this.div.style.width = "min(420px, calc(100vw - 24px))";
-    this.div.style.height = "680px";
     this.div.style.maxHeight = "calc(100vh - 40px)";
-    this.div.style.overflowY = "auto";
+    this.div.style.overflowY = "hidden";
     this.div.style.overflowX = "hidden";
     this.div.style.background = UITheme.panelBg;
     this.div.style.color = UITheme.panelText;
@@ -1000,8 +999,9 @@ class ColumnPresetsManagerUI {
     
     const selectAllLabel = document.createElement("label");
     selectAllLabel.htmlFor = "ywbSelectAllAccounts";
-    selectAllLabel.textContent = "Выбрать все аккаунты (Ctrl/Cmd для мультивыбора)";
-    selectAllLabel.style.fontSize = "14px";
+    selectAllLabel.innerHTML = `Выбрать все аккаунты <span style="color:${UITheme.accentMuted};">(Ctrl/Cmd для мультивыбора)</span>`;
+    selectAllLabel.style.fontSize = "12px";
+    selectAllLabel.style.color = UITheme.label;
     selectAllLabel.style.margin = "0";
     
     selectAllContainer.appendChild(selectAllCheckbox);
@@ -1235,6 +1235,7 @@ class ColumnPresetsManagerUI {
     const importTabContent = document.createElement("div");
     importTabContent.id = "ywbImportTabContent";
     importTabContent.style.width = "100%";
+    importTabContent.style.overflowX = "hidden";
     importTabContent.style.display = "none";
     
     const importDropdown = this.createImportAccountDropdown();
@@ -1262,8 +1263,7 @@ class ColumnPresetsManagerUI {
         const dryRunMessage = [
           `Готов к импорту пресета: ${presetContent.preset.name || "Без названия"}`,
           `Целевых аккаунтов: ${this.selectedImportAccountIds.length}`,
-          `Кастомных метрик: ${(presetContent.customMetrics || []).length}`,
-          `Ширин колонок: ${(presetContent.sizes || []).length}`
+          `Кастомных метрик: ${(presetContent.customMetrics || []).length}`
         ].join("\n");
 
         if (!confirm(`${dryRunMessage}\n\nПродолжить импорт?`)) {
@@ -1296,6 +1296,10 @@ class ColumnPresetsManagerUI {
     
     // Add log area
     const logArea = this.createLogArea();
+    logArea.style.maxWidth = "100%";
+    logArea.style.width = "100%";
+    logArea.style.marginLeft = "auto";
+    logArea.style.marginRight = "auto";
     div.appendChild(logArea);
     
     // Add div to body
@@ -1311,30 +1315,8 @@ class ColumnPresetsManagerUI {
 // ============================================
 async function showColumnPresetsManager() {
   try {
-    // Show loading message
-    const loadingDiv = document.createElement("div");
-    loadingDiv.style.position = "fixed";
-    loadingDiv.style.top = "50%";
-    loadingDiv.style.left = "50%";
-    loadingDiv.style.transform = "translate(-50%, -50%)";
-    loadingDiv.style.padding = "12px 14px";
-    loadingDiv.style.backgroundColor = UITheme.panelBg;
-    loadingDiv.style.color = UITheme.panelText;
-    loadingDiv.style.border = UITheme.panelBorder;
-    loadingDiv.style.borderRadius = "10px";
-    loadingDiv.style.boxShadow = UITheme.panelShadow;
-    loadingDiv.style.zIndex = "2147483647";
-    loadingDiv.style.fontSize = "13px";
-    loadingDiv.style.fontWeight = "700";
-    loadingDiv.style.fontFamily = UITheme.fontFamily;
-    loadingDiv.textContent = "Загрузка аккаунтов...";
-    document.body.appendChild(loadingDiv);
-    
     // Load all accounts
     await accountManager.loadAll();
-    
-    // Remove loading message
-    document.body.removeChild(loadingDiv);
     
     // Show UI
     const ui = new ColumnPresetsManagerUI();
