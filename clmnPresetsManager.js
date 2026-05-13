@@ -12,21 +12,24 @@ const Config = {
 
 const UITheme = {
   fontFamily: "'Inter', 'Segoe UI', Roboto, Arial, sans-serif",
-  panelBg: "linear-gradient(180deg,#061514 0%, #071716 100%)",
-  panelText: "#dce7e3",
-  panelBorder: "1px solid rgba(100,214,168,.22)",
-  panelShadow: "0 14px 32px rgba(0,0,0,.45)",
-  accent: "#43f09b",
-  accentMuted: "#8dcaa7",
-  controlBg: "#0b221d",
-  controlBorder: "1px solid rgba(108,211,171,.30)",
-  controlText: "#d8e6e0",
-  inputBg: "#0a201b",
-  inputBorder: "1px solid rgba(89,223,160,.35)",
-  inputText: "#d7e5df",
-  logBg: "#081a16",
-  logBorder: "1px solid rgba(85,233,165,.24)",
-  logText: "#6dffae"
+  headingFontFamily: "'Space Grotesk', 'Inter', 'Segoe UI', sans-serif",
+  panelBg: "linear-gradient(180deg, rgba(9,17,15,.96) 0%, rgba(6,11,10,.98) 100%)",
+  panelText: "#E9FFEF",
+  panelBorder: "1px solid rgba(158,183,167,.22)",
+  panelShadow: "0 18px 40px rgba(0,0,0,.55), inset 0 0 28px rgba(77,255,143,.05)",
+  accent: "#4DFF8F",
+  accentStrong: "#00FF66",
+  accentMuted: "#9EB7A7",
+  controlBg: "rgba(13,21,19,0.86)",
+  controlBorder: "1px solid rgba(158,183,167,.3)",
+  controlText: "#E9FFEF",
+  inputBg: "rgba(9,17,15,.94)",
+  inputBorder: "1px solid rgba(124,147,135,.5)",
+  inputText: "#E9FFEF",
+  mutedText: "#7C9387",
+  logBg: "rgba(9,17,15,.94)",
+  logBorder: "1px solid rgba(124,147,135,.4)",
+  logText: "#9EFDBD"
 };
 
 // ============================================
@@ -171,7 +174,7 @@ class FileSelector {
     this.div.style.borderRadius = "10px";
 
     var title = document.createElement("div");
-    title.innerHTML = "Select file to import preset";
+    title.innerHTML = "Выберите JSON-файл для импорта";
     title.style.textAlign = "center";
     title.style.fontWeight = "700";
     title.style.color = "#e7fff2";
@@ -203,7 +206,7 @@ class FileSelector {
 
   createButton() {
     this.button = document.createElement("button");
-    this.button.textContent = "Select File";
+    this.button.textContent = "Выбрать файл";
     this.button.style.marginTop = "10px";
     this.button.style.padding = "8px 10px";
     this.button.style.border = "none";
@@ -229,7 +232,7 @@ class FileSelector {
       this.fileInput.onchange = async () => {
         if (!this.fileInput.files || this.fileInput.files.length === 0) {
           document.body.removeChild(this.div);
-          alert("Operation canceled");
+          alert("Операция отменена");
           reject("File selection cancelled by user");
           return;
         }
@@ -736,7 +739,7 @@ class ColumnPresetsManagerUI {
     this.div.style.top = "50%";
     this.div.style.left = "50%";
     this.div.style.transform = "translate(-50%, -50%)";
-    this.div.style.width = "400px";
+    this.div.style.width = "440px";
     this.div.style.maxHeight = "90vh";
     this.div.style.overflowY = "auto";
     this.div.style.background = UITheme.panelBg;
@@ -755,7 +758,7 @@ class ColumnPresetsManagerUI {
 
     // Create and style the title
     const title = document.createElement("div");
-    title.innerHTML = `<h2 style="margin:0 0 4px 0;font-size:46px;line-height:.92;color:${UITheme.accent};font-weight:800;letter-spacing:-.6px;">FB Preset Manager</h2><p style="opacity:.78;margin:0;font-size:18px;font-weight:600;">v ${Config.VERSION}</p>`;
+    title.innerHTML = `<h2 style="margin:0 0 6px 0;font-size:30px;line-height:1;color:${UITheme.accent};font-weight:700;letter-spacing:1.2px;text-transform:uppercase;font-family:${UITheme.headingFontFamily};">FB PRESET MANAGER</h2><p style="opacity:.82;margin:0;font-size:12px;letter-spacing:.9px;text-transform:uppercase;color:${UITheme.mutedText};font-weight:600;">версия ${Config.VERSION}</p>`;
     title.style.textAlign = "left";
     title.style.width = "100%";
     title.style.marginBottom = "16px";
@@ -789,13 +792,16 @@ class ColumnPresetsManagerUI {
     button.style.margin = "8px 0";
     button.style.padding = "12px 15px";
     button.style.width = "100%";
-    button.style.background = UITheme.controlBg;
+    button.style.background = "linear-gradient(180deg, #4DFF8F 0%, #00FF66 100%)";
     button.style.color = UITheme.controlText;
-    button.style.border = UITheme.controlBorder;
+    button.style.border = "1px solid rgba(77,255,143,.6)";
     button.style.borderRadius = "12px";
     button.style.cursor = "pointer";
     button.style.fontSize = "16px";
     button.style.fontWeight = "700";
+    button.style.textTransform = "uppercase";
+    button.style.letterSpacing = ".5px";
+    button.style.boxShadow = "0 10px 24px rgba(0,255,102,.22)";
     button.setAttribute("data-original-text", text);
     
     this.buttons[id] = button;
@@ -820,7 +826,7 @@ class ColumnPresetsManagerUI {
       button.disabled = true;
       button.style.opacity = "0.72";
       button.style.cursor = "not-allowed";
-      button.textContent = "Processing...";
+      button.textContent = "Выполняется...";
     } else {
       button.disabled = false;
       button.style.opacity = "1";
@@ -850,7 +856,7 @@ class ColumnPresetsManagerUI {
     select.style.border = UITheme.inputBorder;
     select.style.background = UITheme.inputBg;
     select.style.color = UITheme.inputText;
-    select.style.fontSize = "16px";
+    select.style.fontSize = "14px";
     
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
@@ -903,7 +909,8 @@ class ColumnPresetsManagerUI {
     label.style.display = "block";
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
-    label.style.fontWeight = "bold";
+    label.style.fontWeight = "700";
+    label.style.color = UITheme.panelText;
     
     const select = document.createElement("select");
     select.id = "ywbPresetSelect";
@@ -1000,9 +1007,11 @@ class ColumnPresetsManagerUI {
     select.multiple = true;
     select.size = Math.min(allAccountsData.length, 6);
     select.style.width = "100%";
-    select.style.padding = "5px";
-    select.style.borderRadius = "5px";
-    select.style.border = "1px solid #ccc";
+    select.style.padding = "8px";
+    select.style.borderRadius = "12px";
+    select.style.border = UITheme.inputBorder;
+    select.style.background = UITheme.inputBg;
+    select.style.color = UITheme.inputText;
     select.style.fontSize = "12px";
     
     allAccountsData.forEach(account => {
@@ -1044,7 +1053,7 @@ class ColumnPresetsManagerUI {
       
       const defaultOption = document.createElement("option");
       defaultOption.value = "";
-      defaultOption.textContent = "-- Choose an account --";
+      defaultOption.textContent = "-- Выберите аккаунт --";
       defaultOption.disabled = true;
       defaultOption.selected = !currentValue;
       exportSelect.appendChild(defaultOption);
@@ -1080,19 +1089,19 @@ class ColumnPresetsManagerUI {
     const tabContainer = document.createElement("div");
     tabContainer.style.display = "flex";
     tabContainer.style.width = "100%";
-    tabContainer.style.marginBottom = "12px";
+    tabContainer.style.marginBottom = "14px";
     tabContainer.style.borderBottom = UITheme.controlBorder;
     
     const exportTab = document.createElement("button");
     exportTab.id = "ywbExportTab";
     exportTab.textContent = "Экспорт";
     exportTab.style.flex = "1";
-    exportTab.style.padding = "8px";
+    exportTab.style.padding = "10px";
     exportTab.style.border = "none";
     exportTab.style.background = "transparent";
     exportTab.style.cursor = "pointer";
     exportTab.style.fontSize = "14px";
-    exportTab.style.fontWeight = "bold";
+    exportTab.style.fontWeight = "700";
     exportTab.style.borderBottom = `3px solid ${UITheme.accent}`;
     exportTab.style.color = UITheme.panelText;
     
@@ -1100,17 +1109,19 @@ class ColumnPresetsManagerUI {
     importTab.id = "ywbImportTab";
     importTab.textContent = "Импорт";
     importTab.style.flex = "1";
-    importTab.style.padding = "8px";
+    importTab.style.padding = "10px";
     importTab.style.border = "none";
     importTab.style.background = "transparent";
     importTab.style.color = UITheme.accentMuted;
     importTab.style.cursor = "pointer";
     importTab.style.fontSize = "14px";
-    importTab.style.fontWeight = "bold";
+    importTab.style.fontWeight = "700";
     
     exportTab.onclick = () => {
       exportTab.style.borderBottom = `3px solid ${UITheme.accent}`;
       importTab.style.borderBottom = "none";
+      exportTab.style.color = UITheme.panelText;
+      importTab.style.color = UITheme.accentMuted;
       document.getElementById("ywbExportTabContent").style.display = "block";
       document.getElementById("ywbImportTabContent").style.display = "none";
     };
@@ -1118,6 +1129,8 @@ class ColumnPresetsManagerUI {
     importTab.onclick = () => {
       importTab.style.borderBottom = `3px solid ${UITheme.accent}`;
       exportTab.style.borderBottom = "none";
+      importTab.style.color = UITheme.panelText;
+      exportTab.style.color = UITheme.accentMuted;
       document.getElementById("ywbExportTabContent").style.display = "none";
       document.getElementById("ywbImportTabContent").style.display = "block";
     };
@@ -1168,11 +1181,11 @@ class ColumnPresetsManagerUI {
     logEntry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
     
     if (type === "error") {
-      logEntry.style.color = "red";
+      logEntry.style.color = "#FF7676";
     } else if (type === "success") {
-      logEntry.style.color = "green";
+      logEntry.style.color = "#4DFF8F";
     } else if (type === "warning") {
-      logEntry.style.color = "orange";
+      logEntry.style.color = "#FFD166";
     }
     
     this.logArea.appendChild(logEntry);
@@ -1254,7 +1267,7 @@ class ColumnPresetsManagerUI {
       const fileSelector = new FileSelector(file => fileHelper.readFileAsJsonAsync(file));
       
       try {
-        logger.info("Opening file selector...");
+        logger.info("Открываем выбор файла...");
         const presetContent = await fileSelector.show();
         
         const validation = validatePresetImportContent(presetContent);
@@ -1265,14 +1278,14 @@ class ColumnPresetsManagerUI {
         }
 
         const dryRunMessage = [
-          `Ready to import preset: ${presetContent.preset.name || "Unnamed"}`,
-          `Target accounts: ${this.selectedImportAccountIds.length}`,
-          `Custom metrics: ${(presetContent.customMetrics || []).length}`,
-          `Column sizes: ${(presetContent.sizes || []).length}`
+          `Готово к импорту пресета: ${presetContent.preset.name || "Без названия"}`,
+          `Целевых аккаунтов: ${this.selectedImportAccountIds.length}`,
+          `Кастомных метрик: ${(presetContent.customMetrics || []).length}`,
+          `Ширин колонок: ${(presetContent.sizes || []).length}`
         ].join("\n");
 
-        if (!confirm(`${dryRunMessage}\n\nContinue import?`)) {
-          logger.warning("Import cancelled in dry-run confirmation.");
+        if (!confirm(`${dryRunMessage}\n\nПродолжить импорт?`)) {
+          logger.warning("Импорт отменён на этапе подтверждения.");
           return;
         }
 
@@ -1289,12 +1302,12 @@ class ColumnPresetsManagerUI {
         // Only ask for reload if current account was in the import list
         const currentAccountId = require("BusinessUnifiedNavigationContext").adAccountID;
         if (this.selectedImportAccountIds.includes(currentAccountId)) {
-          if (confirm("Column presets in current account changed, reload?")) {
+          if (confirm("Пресеты колонок в текущем аккаунте изменились. Перезагрузить страницу?")) {
             location.reload();
           }
         }
         
-        logger.success("Import complete!");
+        logger.success("Импорт завершён.");
       } catch (error) {
         logger.error(`Error: ${error}`);
       }
@@ -1315,9 +1328,9 @@ class ColumnPresetsManagerUI {
     // Create a small link for copying as bookmark
     const copyBookmarkLink = document.createElement("a");
     copyBookmarkLink.href = "#";
-    copyBookmarkLink.textContent = "Copy as bookmark";
+    copyBookmarkLink.textContent = "Скопировать как bookmark";
     copyBookmarkLink.style.fontSize = "12px";
-    copyBookmarkLink.style.color = "blue";
+    copyBookmarkLink.style.color = UITheme.accentMuted;
     copyBookmarkLink.style.textDecoration = "underline";
     copyBookmarkLink.style.cursor = "pointer";
     copyBookmarkLink.style.marginTop = "10px";
@@ -1334,7 +1347,7 @@ class ColumnPresetsManagerUI {
     document.body.appendChild(div);
     
     // Initial log message
-    this.log("UI initialized. Ready to work.", "success");
+    this.log("Интерфейс инициализирован. Готов к работе.", "success");
   }
 }
 
@@ -1350,12 +1363,14 @@ async function showColumnPresetsManager() {
     loadingDiv.style.left = "50%";
     loadingDiv.style.transform = "translate(-50%, -50%)";
     loadingDiv.style.padding = "20px";
-    loadingDiv.style.backgroundColor = "yellow";
-    loadingDiv.style.borderRadius = "10px";
+    loadingDiv.style.backgroundColor = "rgba(9,17,15,.96)";
+    loadingDiv.style.borderRadius = "12px";
+    loadingDiv.style.border = UITheme.inputBorder;
+    loadingDiv.style.color = UITheme.panelText;
     loadingDiv.style.zIndex = "1000";
     loadingDiv.style.fontSize = "16px";
     loadingDiv.style.fontWeight = "bold";
-    loadingDiv.textContent = "Loading accounts...";
+    loadingDiv.textContent = "Загрузка аккаунтов...";
     document.body.appendChild(loadingDiv);
     
     // Load all accounts
