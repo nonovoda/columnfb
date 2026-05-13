@@ -69,9 +69,6 @@ function validatePresetImportContent(payload) {
   if (!Array.isArray(payload.preset.columns)) {
     return { valid: false, error: "Invalid JSON: preset.columns must be an array" };
   }
-  if (payload.sizes && !Array.isArray(payload.sizes)) {
-    return { valid: false, error: "Invalid JSON: sizes must be an array" };
-  }
   if (payload.customMetrics && !Array.isArray(payload.customMetrics)) {
     return { valid: false, error: "Invalid JSON: customMetrics must be an array" };
   }
@@ -508,17 +505,16 @@ async function fetchAccountPresets(accountId) {
   
   let js = await API.getRequest(
     `act_${accId}`,
-    `fields=["user_settings{id,column_presets{attribution_windows,columns,id,name,time_created,time_updated}},ad_column_sizes{page,tab,report,view,columns}"]`
+    `fields=["user_settings{id,column_presets{attribution_windows,columns,id,name,time_created,time_updated}}"]`
   );
 
   const presets = js.user_settings?.column_presets?.data || [];
-  const sizes = js.ad_column_sizes?.data || [];
   
   logger.success(`Loaded ${presets.length} presets.`);
-  return { presets, sizes };
+  return { presets };
 }
 
-async function exportColumnPreset(selectedPreset, sizes = [], accountId = null) {
+async function exportColumnPreset(selectedPreset, accountId = null) {
   if (!selectedPreset) {
     logger.warning("No preset selected");
     return null;
@@ -533,7 +529,6 @@ async function exportColumnPreset(selectedPreset, sizes = [], accountId = null) 
       toolVersion: Config.VERSION
     },
     preset: selectedPreset,
-    sizes: sizes,
     customMetrics: []
   };
   
@@ -599,26 +594,6 @@ async function setDefaultColumnPreset(adAccountId, presetId) {
   };
   let js = await API.postRequest(`act_${accId}/user_settings`, data);
   return js;
-}
-
-async function uploadSize(adAccountId, size) {
-  let accId = adAccountId ?? require("BusinessUnifiedNavigationContext").adAccountID;
-  const columns = size.columns.reduce((acc, { key, value }) => {
-    acc[key] = parseInt(value, 10);
-    return acc;
-  }, {});
-
-  let data = {
-    page: size.page,
-    tab: size.tab,
-    columns: JSON.stringify(columns),
-  };
-  logger.info(`Uploading sizes to ad account ${accId}...`);
-  let js = await API.postRequest(`act_${accId}/ad_column_sizes`, data);
-  const sizeId = js.id;
-
-  js = await API.postRequest(sizeId, data);
-  return js.success;
 }
 
 async function importPresetToAccount(accountId, presetContent) {
@@ -698,20 +673,6 @@ async function importPresetToSelectedAccounts(accountIds, presetContent, uiInsta
   logger.success(summaryMessage);
 }
 
-async function importSizesToAccount(accountId, sizes) {
-  try {
-    for (let i = 0; i < sizes.length; i++) {
-      logger.info(`Uploading size ${i+1}/${sizes.length} to account ${accountId}...`);
-      await uploadSize(accountId, sizes[i]);
-    }
-    logger.success(`Imported ${sizes.length} sizes to account ${accountId}`);
-    return { success: true };
-  } catch (error) {
-    logger.error(`Error importing sizes to account ${accountId}: ${error}`);
-    return { success: false, error };
-  }
-}
-
 function reloadPageWithPreset(presetId) {
   const urlObj = new URL(window.location.href);
   urlObj.searchParams.set("column_preset", presetId);
@@ -730,7 +691,6 @@ class ColumnPresetsManagerUI {
     this.logArea = null;
     this.accountPresets = [];  // Presets loaded for selected account
     this.selectedPreset = null; // Currently selected preset
-    this.accountSizes = [];    // Column sizes for selected account
   }
 
   createDiv() {
@@ -876,14 +836,12 @@ class ColumnPresetsManagerUI {
       this.selectedExportAccountId = select.value;
       this.selectedPreset = null;
       this.accountPresets = [];
-      this.accountSizes = [];
       
       // Load presets for selected account
       if (select.value) {
         try {
-          const { presets, sizes } = await fetchAccountPresets(select.value);
+          const { presets } = await fetchAccountPresets(select.value);
           this.accountPresets = presets;
-          this.accountSizes = sizes;
           this.refreshPresetDropdown();
         } catch (error) {
           logger.error(`Error loading presets: ${error}`);
@@ -1223,7 +1181,7 @@ class ColumnPresetsManagerUI {
         alert("Выберите пресет для экспорта.");
         return;
       }
-      await exportColumnPreset(this.selectedPreset, this.accountSizes, this.selectedExportAccountId);
+      await exportColumnPreset(this.selectedPreset, this.selectedExportAccountId);
     });
     
     exportTabContent.appendChild(exportDropdown);
@@ -1237,25 +1195,6 @@ class ColumnPresetsManagerUI {
     importTabContent.style.display = "none";
     
     const importDropdown = this.createImportAccountDropdown();
-    
-    const importSizesCheckbox = document.createElement("div");
-    importSizesCheckbox.style.display = "flex";
-    importSizesCheckbox.style.alignItems = "center";
-    importSizesCheckbox.style.margin = "10px 0";
-    importSizesCheckbox.style.width = "100%";
-    
-    const sizesCheckbox = document.createElement("input");
-    sizesCheckbox.type = "checkbox";
-    sizesCheckbox.id = "ywbImportSizes";
-    sizesCheckbox.style.marginRight = "10px";
-    
-    const sizesLabel = document.createElement("label");
-    sizesLabel.htmlFor = "ywbImportSizes";
-    sizesLabel.textContent = "Также импортировать ширины колонок";
-    sizesLabel.style.fontSize = "14px";
-    
-    importSizesCheckbox.appendChild(sizesCheckbox);
-    importSizesCheckbox.appendChild(sizesLabel);
     
     const importButton = this.createButton("import-btn", "Импортировать пресет в выбранные аккаунты", async () => {
       if (!this.selectedImportAccountIds || this.selectedImportAccountIds.length === 0) {
@@ -1280,8 +1219,7 @@ class ColumnPresetsManagerUI {
         const dryRunMessage = [
           `Готово к импорту пресета: ${presetContent.preset.name || "Без названия"}`,
           `Целевых аккаунтов: ${this.selectedImportAccountIds.length}`,
-          `Кастомных метрик: ${(presetContent.customMetrics || []).length}`,
-          `Ширин колонок: ${(presetContent.sizes || []).length}`
+          `Кастомных метрик: ${(presetContent.customMetrics || []).length}`
         ].join("\n");
 
         if (!confirm(`${dryRunMessage}\n\nПродолжить импорт?`)) {
@@ -1290,14 +1228,6 @@ class ColumnPresetsManagerUI {
         }
 
         await importPresetToSelectedAccounts(this.selectedImportAccountIds, presetContent, this);
-        
-        // Import sizes if checkbox is checked
-        const importSizes = document.getElementById("ywbImportSizes").checked;
-        if (importSizes && presetContent.sizes && presetContent.sizes.length > 0) {
-          for (const accountId of this.selectedImportAccountIds) {
-            await importSizesToAccount(accountId, presetContent.sizes);
-          }
-        }
         
         // Only ask for reload if current account was in the import list
         const currentAccountId = require("BusinessUnifiedNavigationContext").adAccountID;
@@ -1314,7 +1244,6 @@ class ColumnPresetsManagerUI {
     });
     
     importTabContent.appendChild(importDropdown);
-    importTabContent.appendChild(importSizesCheckbox);
     importTabContent.appendChild(importButton);
 
     // Add tab contents to div
@@ -1360,28 +1289,8 @@ class ColumnPresetsManagerUI {
 // ============================================
 async function showColumnPresetsManager() {
   try {
-    // Show loading message
-    const loadingDiv = document.createElement("div");
-    loadingDiv.style.position = "fixed";
-    loadingDiv.style.top = "50%";
-    loadingDiv.style.left = "50%";
-    loadingDiv.style.transform = "translate(-50%, -50%)";
-    loadingDiv.style.padding = "20px";
-    loadingDiv.style.backgroundColor = "rgba(9,17,15,.96)";
-    loadingDiv.style.borderRadius = "12px";
-    loadingDiv.style.border = UITheme.inputBorder;
-    loadingDiv.style.color = UITheme.panelText;
-    loadingDiv.style.zIndex = "1000";
-    loadingDiv.style.fontSize = "16px";
-    loadingDiv.style.fontWeight = "bold";
-    loadingDiv.textContent = "Загрузка аккаунтов...";
-    document.body.appendChild(loadingDiv);
-    
     // Load all accounts
     await accountManager.loadAll();
-    
-    // Remove loading message
-    document.body.removeChild(loadingDiv);
     
     // Show UI
     const ui = new ColumnPresetsManagerUI();
@@ -1430,10 +1339,8 @@ ${exportColumnPreset.toString()}
 ${fetchUserSettingsId.toString()}
 ${uploadPreset.toString()}
 ${setDefaultColumnPreset.toString()}
-${uploadSize.toString()}
 ${importPresetToAccount.toString()}
 ${importPresetToSelectedAccounts.toString()}
-${importSizesToAccount.toString()}
 ${reloadPageWithPreset.toString()}
 ${ColumnPresetsManagerUI.toString()}
 ${showColumnPresetsManager.toString()}

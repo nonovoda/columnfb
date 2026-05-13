@@ -28,4 +28,30 @@
   letter-spacing: .5px;
   text-transform: uppercase;
   box-shadow: 0 10px 24px rgba(0,255,102,.22);
+  transition: transform .18s ease, box-shadow .18s ease, opacity .18s ease;
+}
+
+.fbpm-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 28px rgba(0,255,102,.28);
+}
+
+.fbpm-secondary {
+  background: var(--fb-surface-0);
+  border: 1px solid rgba(158,183,167,.34);
+  color: var(--fb-text-primary);
+  border-radius: 10px;
+}
+
+.fbpm-input {
+  background: var(--fb-surface-1);
+  border: 1px solid rgba(124,147,135,.5);
+  color: var(--fb-text-primary);
+  border-radius: 12px;
+}
+
+.fbpm-input:focus {
+  outline: none;
+  border-color: rgba(77,255,143,.65);
+  box-shadow: 0 0 0 2px rgba(77,255,143,.18);
 }
