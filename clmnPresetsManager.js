@@ -720,9 +720,9 @@ class ColumnPresetsManagerUI {
     this.div.style.width = "400px";
     this.div.style.maxHeight = "90vh";
     this.div.style.overflowY = "auto";
-    this.div.style.background = "radial-gradient(circle at 20% 0%, #053326 0%, #02150f 58%, #010c09 100%)";
-    this.div.style.color = "#dcfff0";
-    this.div.style.border = "1px solid rgba(81,247,164,.20)";
+    this.div.style.background = "linear-gradient(180deg,#061514 0%, #071716 100%)";
+    this.div.style.color = "#dce7e3";
+    this.div.style.border = "1px solid rgba(100,214,168,.22)";
     this.div.style.zIndex = "1000";
     this.div.style.display = "flex";
     this.div.style.flexDirection = "column";
@@ -730,26 +730,28 @@ class ColumnPresetsManagerUI {
     this.div.style.justifyContent = "flex-start";
     this.div.style.padding = "20px";
     this.div.style.boxSizing = "border-box";
-    this.div.style.borderRadius = "10px";
-    this.div.style.boxShadow = "0 30px 80px rgba(0,0,0,.55), inset 0 0 60px rgba(63,255,159,.05)";
+    this.div.style.borderRadius = "14px";
+    this.div.style.boxShadow = "0 14px 32px rgba(0,0,0,.45)";
     this.div.style.fontFamily = "'Inter', 'Segoe UI', Roboto, Arial, sans-serif";
 
     // Create and style the title
     const title = document.createElement("div");
-    title.innerHTML = `<div style="display:inline-block;padding:5px 12px;border-radius:999px;border:1px solid rgba(84,255,169,.35);font-size:11px;font-weight:700;letter-spacing:.4px;color:#59ffab;margin-bottom:6px;">META ADS PRESET HELPER</div><h2 style="margin:4px 0 8px 0;font-size:28px;line-height:1.1;">Column Preset Manager</h2><p style="opacity:.85;margin:0;font-size:12px;">v${Config.VERSION} • by <a href='https://yellowweb.top' target='_blank' style='color:#8ce7bd'>Yellow Web</a></p>`;
-    title.style.textAlign = "center";
-    title.style.marginBottom = "20px";
+    title.innerHTML = `<h2 style="margin:0 0 4px 0;font-size:48px;line-height:.92;color:#43f09b;font-weight:800;letter-spacing:-.6px;">FB Preset Manager</h2><p style="opacity:.78;margin:0;font-size:18px;font-weight:600;">v ${Config.VERSION}</p>`;
+    title.style.textAlign = "left";
+    title.style.width = "100%";
+    title.style.marginBottom = "16px";
 
     // Create and style the close button
     const closeButton = document.createElement("button");
     closeButton.innerHTML = "X";
     closeButton.style.position = "absolute";
-    closeButton.style.top = "10px";
-    closeButton.style.right = "10px";
+    closeButton.style.top = "12px";
+    closeButton.style.right = "12px";
     closeButton.style.border = "none";
     closeButton.style.background = "transparent";
-    closeButton.style.color = "#9bdab9";
-    closeButton.style.fontSize = "18px";
+    closeButton.style.color = "#c1d5cd";
+    closeButton.style.fontSize = "24px";
+    closeButton.style.fontWeight = "700";
     closeButton.style.cursor = "pointer";
     closeButton.onclick = () => {
       document.body.removeChild(this.div);
@@ -765,15 +767,15 @@ class ColumnPresetsManagerUI {
     const button = document.createElement("button");
     button.id = id;
     button.textContent = text;
-    button.style.margin = "10px 0";
-    button.style.padding = "10px 15px";
+    button.style.margin = "8px 0";
+    button.style.padding = "12px 15px";
     button.style.width = "100%";
-    button.style.background = "linear-gradient(180deg,#48ffa0,#20d676)";
-    button.style.color = "#032313";
-    button.style.border = "none";
+    button.style.background = "#0b221d";
+    button.style.color = "#d8e6e0";
+    button.style.border = "1px solid rgba(108,211,171,.30)";
     button.style.borderRadius = "12px";
     button.style.cursor = "pointer";
-    button.style.fontSize = "15px";
+    button.style.fontSize = "16px";
     button.style.fontWeight = "700";
     button.setAttribute("data-original-text", text);
     
@@ -797,7 +799,7 @@ class ColumnPresetsManagerUI {
     
     if (isLoading) {
       button.disabled = true;
-      button.style.opacity = "0.75";
+      button.style.opacity = "0.72";
       button.style.cursor = "not-allowed";
       button.textContent = "Processing...";
     } else {
@@ -819,17 +821,17 @@ class ColumnPresetsManagerUI {
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
     label.style.color = "#dff8ea";
-    label.style.fontWeight = "bold";
+    label.style.fontWeight = "700";
     
     const select = document.createElement("select");
     select.id = "ywbExportAccountSelect";
     select.style.width = "100%";
-    select.style.padding = "8px";
-    select.style.borderRadius = "10px";
+    select.style.padding = "11px 12px";
+    select.style.borderRadius = "12px";
     select.style.border = "1px solid rgba(89,223,160,.35)";
-    select.style.background = "#041b14";
-    select.style.color = "#e6fff3";
-    select.style.fontSize = "14px";
+    select.style.background = "#0a201b";
+    select.style.color = "#d7e5df";
+    select.style.fontSize = "16px";
     
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
@@ -975,7 +977,7 @@ class ColumnPresetsManagerUI {
     const select = document.createElement("select");
     select.id = "ywbImportAccountSelect";
     select.multiple = true;
-    select.size = Math.min(allAccountsData.length, 8);
+    select.size = Math.min(allAccountsData.length, 6);
     select.style.width = "100%";
     select.style.padding = "5px";
     select.style.borderRadius = "5px";
@@ -1057,14 +1059,14 @@ class ColumnPresetsManagerUI {
     const tabContainer = document.createElement("div");
     tabContainer.style.display = "flex";
     tabContainer.style.width = "100%";
-    tabContainer.style.marginBottom = "15px";
-    tabContainer.style.borderBottom = "1px solid rgba(98,236,174,.24)";
+    tabContainer.style.marginBottom = "12px";
+    tabContainer.style.borderBottom = "1px solid rgba(98,236,174,.18)";
     
     const exportTab = document.createElement("button");
     exportTab.id = "ywbExportTab";
     exportTab.textContent = "Export";
     exportTab.style.flex = "1";
-    exportTab.style.padding = "10px";
+    exportTab.style.padding = "8px";
     exportTab.style.border = "none";
     exportTab.style.background = "transparent";
     exportTab.style.cursor = "pointer";
@@ -1077,7 +1079,7 @@ class ColumnPresetsManagerUI {
     importTab.id = "ywbImportTab";
     importTab.textContent = "Import";
     importTab.style.flex = "1";
-    importTab.style.padding = "10px";
+    importTab.style.padding = "8px";
     importTab.style.border = "none";
     importTab.style.background = "transparent";
     importTab.style.color = "#8dcaa7";
@@ -1114,19 +1116,19 @@ class ColumnPresetsManagerUI {
     
     const logLabel = document.createElement("div");
     logLabel.textContent = "Log:";
-    logLabel.style.fontSize = "12px";
+    logLabel.style.fontSize = "13px";
     logLabel.style.fontWeight = "bold";
     logLabel.style.marginBottom = "5px";
     
     this.logArea = document.createElement("div");
     this.logArea.id = "ywbLogArea";
     this.logArea.style.width = "100%";
-    this.logArea.style.height = "120px";
+    this.logArea.style.height = "140px";
     this.logArea.style.overflowY = "auto";
-    this.logArea.style.backgroundColor = "#02130d";
+    this.logArea.style.backgroundColor = "#081a16";
     this.logArea.style.border = "1px solid rgba(85,233,165,.24)";
-    this.logArea.style.borderRadius = "12px";
-    this.logArea.style.padding = "8px";
+    this.logArea.style.borderRadius = "10px";
+    this.logArea.style.padding = "10px";
     this.logArea.style.fontSize = "12px";
     this.logArea.style.fontFamily = "monospace";
     this.logArea.style.lineHeight = "1.4";
