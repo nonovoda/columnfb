@@ -2,10 +2,59 @@
 // Configuration
 // ============================================
 const Config = {
-  VERSION: "2025.12.12",
+  VERSION: "2026.05.13",
   API_VERSION: "v23.0",
-  API_URL: "https://adsmanager-graph.facebook.com/v23.0/"
+  API_URL: "https://adsmanager-graph.facebook.com/v23.0/",
+  EXPORT_SCHEMA_VERSION: "2.0.0",
+  RETRY_MAX_ATTEMPTS: 4,
+  RETRY_BASE_DELAY_MS: 600
 };
+
+// ============================================
+// Helpers
+// ============================================
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function normalizeApiError(responseJson, context = "API request") {
+  if (!responseJson || !responseJson.error) return null;
+  const err = responseJson.error;
+  return {
+    message: err.message || `${context} failed`,
+    type: err.type || "GraphApiError",
+    code: err.code,
+    subcode: err.error_subcode,
+    isTransient: Boolean(err.is_transient),
+    fbtrace_id: err.fbtrace_id
+  };
+}
+
+function shouldRetryApiError(apiErr) {
+  if (!apiErr) return false;
+  if (apiErr.isTransient) return true;
+  return [1, 2, 4, 17, 32, 341, 613].includes(apiErr.code);
+}
+
+function validatePresetImportContent(payload) {
+  if (!payload || typeof payload !== "object") {
+    return { valid: false, error: "Invalid JSON: expected object" };
+  }
+  if (!payload.preset || typeof payload.preset !== "object") {
+    return { valid: false, error: "Invalid JSON: missing 'preset' object" };
+  }
+  if (!Array.isArray(payload.preset.columns)) {
+    return { valid: false, error: "Invalid JSON: preset.columns must be an array" };
+  }
+  if (payload.sizes && !Array.isArray(payload.sizes)) {
+    return { valid: false, error: "Invalid JSON: sizes must be an array" };
+  }
+  if (payload.customMetrics && !Array.isArray(payload.customMetrics)) {
+    return { valid: false, error: "Invalid JSON: customMetrics must be an array" };
+  }
+  return { valid: true };
+}
 
 // ============================================
 // Logger Class
@@ -172,6 +221,35 @@ class FileSelector {
 // ============================================
 class FbApi {
   apiUrl = Config.API_URL;
+  
+  async withRetry(requestFn, context = "API request") {
+    let attempt = 0;
+    let lastError = null;
+    while (attempt < Config.RETRY_MAX_ATTEMPTS) {
+      attempt++;
+      try {
+        const responseJson = await requestFn();
+        const apiErr = normalizeApiError(responseJson, context);
+        if (!apiErr) {
+          return responseJson;
+        }
+        lastError = apiErr;
+        if (!shouldRetryApiError(apiErr) || attempt >= Config.RETRY_MAX_ATTEMPTS) {
+          throw new Error(`${context}: ${apiErr.message} (code ${apiErr.code ?? "n/a"})`);
+        }
+        const delayMs = Config.RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250);
+        logger.warning(`${context} failed (attempt ${attempt}/${Config.RETRY_MAX_ATTEMPTS}). Retrying in ${delayMs}ms...`);
+        await sleep(delayMs);
+      } catch (error) {
+        lastError = error;
+        if (attempt >= Config.RETRY_MAX_ATTEMPTS) throw error;
+        const delayMs = Config.RETRY_BASE_DELAY_MS * Math.pow(2, attempt - 1) + Math.floor(Math.random() * 250);
+        logger.warning(`${context} network/error on attempt ${attempt}. Retrying in ${delayMs}ms...`);
+        await sleep(delayMs);
+      }
+    }
+    throw lastError ?? new Error(`${context} failed`);
+  }
 
   async getRequest(path, qs = null, token = null) {
     token = token ?? __accessToken;
@@ -187,27 +265,28 @@ class FbApi {
       finalUrl = `${finalUrl}&${qs}`;
     }
     
-    let f = await fetch(finalUrl, {
-      headers: {
-        accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
-        "accept-language": "ca-ES,ca;q=0.9,en-US;q=0.8,en;q=0.7",
-        "cache-control": "max-age=0",
-        "sec-ch-ua": '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": '"Windows"',
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-      },
-      referrerPolicy: "strict-origin-when-cross-origin",
-      body: null,
-      method: "GET",
-      mode: "cors",
-      credentials: "include",
-      referrer: "https://business.facebook.com/",
-    });
-    let json = await f.json();
-    return json;
+    return this.withRetry(async () => {
+      let f = await fetch(finalUrl, {
+        headers: {
+          accept: "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
+          "accept-language": "ca-ES,ca;q=0.9,en-US;q=0.8,en;q=0.7",
+          "cache-control": "max-age=0",
+          "sec-ch-ua": '"Not?A_Brand";v="8", "Chromium";v="108", "Google Chrome";v="108"',
+          "sec-ch-ua-mobile": "?0",
+          "sec-ch-ua-platform": '"Windows"',
+          "sec-fetch-dest": "empty",
+          "sec-fetch-mode": "cors",
+          "sec-fetch-site": "same-site",
+        },
+        referrerPolicy: "strict-origin-when-cross-origin",
+        body: null,
+        method: "GET",
+        mode: "cors",
+        credentials: "include",
+        referrer: "https://business.facebook.com/",
+      });
+      return await f.json();
+    }, `GET ${path}`);
   }
 
   async getAllPages(path, qs, token = null) {
@@ -238,17 +317,18 @@ class FbApi {
       "sec-fetch-site": "same-site",
     };
     let finalUrl = path.startsWith('http') ? path : this.apiUrl + path;
-    let f = await fetch(finalUrl, {
-      headers: headers,
-      referrer: "https://business.facebook.com/",
-      referrerPolicy: "origin-when-cross-origin",
-      body: new URLSearchParams(body).toString(),
-      method: "POST",
-      mode: "cors",
-      credentials: "include",
-    });
-    let json = await f.json();
-    return json;
+    return this.withRetry(async () => {
+      let f = await fetch(finalUrl, {
+        headers: headers,
+        referrer: "https://business.facebook.com/",
+        referrerPolicy: "origin-when-cross-origin",
+        body: new URLSearchParams(body).toString(),
+        method: "POST",
+        mode: "cors",
+        credentials: "include",
+      });
+      return await f.json();
+    }, `POST ${path}`);
   }
 }
 
@@ -411,6 +491,13 @@ async function exportColumnPreset(selectedPreset, sizes = [], accountId = null) 
   }
 
   const jsFile = {
+    schemaVersion: Config.EXPORT_SCHEMA_VERSION,
+    exportedAt: new Date().toISOString(),
+    source: {
+      accountId: accountId ?? require("BusinessUnifiedNavigationContext").adAccountID,
+      apiVersion: Config.API_VERSION,
+      toolVersion: Config.VERSION
+    },
     preset: selectedPreset,
     sizes: sizes,
     customMetrics: []
@@ -509,10 +596,27 @@ async function importPresetToAccount(accountId, presetContent) {
       logger.info(`Creating ${presetContent.customMetrics.length} custom metric(s) on account ${accountId}...`);
       
       const idMapping = {};
+      const existingMetrics = await fetchCustomMetrics(accountId);
+      const metricsByFingerprint = new Map();
+      for (const m of existingMetrics) {
+        const key = `${m.name}||${m.formula}||${m.format_type || "FLOAT"}`;
+        metricsByFingerprint.set(key, m.id);
+      }
+
       for (const metric of presetContent.customMetrics) {
+        const fingerprint = `${metric.name}||${metric.formula}||${metric.format_type || "FLOAT"}`;
+        const existingId = metricsByFingerprint.get(fingerprint);
+
+        if (existingId) {
+          idMapping[metric.id] = existingId;
+          logger.info(`Metric "${metric.name}" already exists, reusing ID ${existingId}`);
+          continue;
+        }
+
         const newId = await createCustomMetric(accountId, metric);
         if (newId) {
           idMapping[metric.id] = newId;
+          metricsByFingerprint.set(fingerprint, newId);
         } else {
           logger.warning(`Skipping metric "${metric.name}" - creation failed`);
         }
@@ -1107,11 +1211,25 @@ class ColumnPresetsManagerUI {
         logger.info("Opening file selector...");
         const presetContent = await fileSelector.show();
         
-        if (!presetContent || !presetContent.preset) {
-          logger.error("Invalid file format. Expected a JSON file with 'preset' object.");
+        const validation = validatePresetImportContent(presetContent);
+        if (!validation.valid) {
+          logger.error(validation.error);
+          alert(validation.error);
           return;
         }
-        
+
+        const dryRunMessage = [
+          `Ready to import preset: ${presetContent.preset.name || "Unnamed"}`,
+          `Target accounts: ${this.selectedImportAccountIds.length}`,
+          `Custom metrics: ${(presetContent.customMetrics || []).length}`,
+          `Column sizes: ${(presetContent.sizes || []).length}`
+        ].join("\n");
+
+        if (!confirm(`${dryRunMessage}\n\nContinue import?`)) {
+          logger.warning("Import cancelled in dry-run confirmation.");
+          return;
+        }
+
         await importPresetToSelectedAccounts(this.selectedImportAccountIds, presetContent, this);
         
         // Import sizes if checkbox is checked
