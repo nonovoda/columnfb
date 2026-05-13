@@ -736,7 +736,7 @@ class ColumnPresetsManagerUI {
 
     // Create and style the title
     const title = document.createElement("div");
-    title.innerHTML = `<h2 style="margin:0 0 4px 0;font-size:48px;line-height:.92;color:#43f09b;font-weight:800;letter-spacing:-.6px;">FB Preset Manager</h2><p style="opacity:.78;margin:0;font-size:18px;font-weight:600;">v ${Config.VERSION}</p>`;
+    title.innerHTML = `<h2 style="margin:0 0 4px 0;font-size:46px;line-height:.92;color:#43f09b;font-weight:800;letter-spacing:-.6px;">FB Preset Manager</h2><p style="opacity:.78;margin:0;font-size:18px;font-weight:600;">v ${Config.VERSION}</p>`;
     title.style.textAlign = "left";
     title.style.width = "100%";
     title.style.marginBottom = "16px";
@@ -816,7 +816,7 @@ class ColumnPresetsManagerUI {
     container.style.margin = "10px 0";
     
     const label = document.createElement("label");
-    label.textContent = "Select account to export from:";
+    label.textContent = "Аккаунт для экспорта:";
     label.style.display = "block";
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
@@ -835,7 +835,7 @@ class ColumnPresetsManagerUI {
     
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "-- Choose an account --";
+    defaultOption.textContent = "-- Выберите аккаунт --";
     defaultOption.disabled = true;
     defaultOption.selected = true;
     select.appendChild(defaultOption);
@@ -880,7 +880,7 @@ class ColumnPresetsManagerUI {
     container.style.margin = "10px 0";
     
     const label = document.createElement("label");
-    label.textContent = "Select preset to export:";
+    label.textContent = "Пресет для экспорта:";
     label.style.display = "block";
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
@@ -889,14 +889,16 @@ class ColumnPresetsManagerUI {
     const select = document.createElement("select");
     select.id = "ywbPresetSelect";
     select.style.width = "100%";
-    select.style.padding = "8px";
-    select.style.borderRadius = "5px";
-    select.style.border = "1px solid #ccc";
-    select.style.fontSize = "14px";
+    select.style.padding = "11px 12px";
+    select.style.borderRadius = "12px";
+    select.style.border = "1px solid rgba(89,223,160,.35)";
+    select.style.background = "#0a201b";
+    select.style.color = "#d7e5df";
+    select.style.fontSize = "16px";
     
     const defaultOption = document.createElement("option");
     defaultOption.value = "";
-    defaultOption.textContent = "-- Select account first --";
+    defaultOption.textContent = "-- Сначала выберите аккаунт --";
     defaultOption.disabled = true;
     defaultOption.selected = true;
     select.appendChild(defaultOption);
@@ -928,14 +930,14 @@ class ColumnPresetsManagerUI {
     defaultOption.selected = true;
     
     if (this.accountPresets.length === 0) {
-      defaultOption.textContent = this.selectedExportAccountId 
-        ? "-- No presets available --" 
-        : "-- Select account first --";
+      defaultOption.textContent = this.selectedExportAccountId
+        ? "-- Пресеты не найдены --"
+        : "-- Сначала выберите аккаунт --";
       select.appendChild(defaultOption);
       return;
     }
     
-    defaultOption.textContent = "-- Choose a preset --";
+    defaultOption.textContent = "-- Выберите пресет --";
     select.appendChild(defaultOption);
     
     this.accountPresets.forEach((preset, index) => {
@@ -952,7 +954,7 @@ class ColumnPresetsManagerUI {
     container.style.margin = "10px 0";
     
     const label = document.createElement("label");
-    label.textContent = "Select accounts to import to:";
+    label.textContent = "Аккаунты для импорта:";
     label.style.display = "block";
     label.style.marginBottom = "5px";
     label.style.fontSize = "14px";
@@ -968,7 +970,7 @@ class ColumnPresetsManagerUI {
     
     const selectAllLabel = document.createElement("label");
     selectAllLabel.htmlFor = "ywbSelectAllAccounts";
-    selectAllLabel.textContent = "Select All Accounts";
+    selectAllLabel.textContent = "Выбрать все аккаунты";
     selectAllLabel.style.fontSize = "14px";
     
     selectAllContainer.appendChild(selectAllCheckbox);
@@ -1064,7 +1066,7 @@ class ColumnPresetsManagerUI {
     
     const exportTab = document.createElement("button");
     exportTab.id = "ywbExportTab";
-    exportTab.textContent = "Export";
+    exportTab.textContent = "Экспорт";
     exportTab.style.flex = "1";
     exportTab.style.padding = "8px";
     exportTab.style.border = "none";
@@ -1077,7 +1079,7 @@ class ColumnPresetsManagerUI {
     
     const importTab = document.createElement("button");
     importTab.id = "ywbImportTab";
-    importTab.textContent = "Import";
+    importTab.textContent = "Импорт";
     importTab.style.flex = "1";
     importTab.style.padding = "8px";
     importTab.style.border = "none";
@@ -1115,7 +1117,7 @@ class ColumnPresetsManagerUI {
     logContainer.style.paddingTop = "10px";
     
     const logLabel = document.createElement("div");
-    logLabel.textContent = "Log:";
+    logLabel.textContent = "Лог обработки:";
     logLabel.style.fontSize = "13px";
     logLabel.style.fontWeight = "bold";
     logLabel.style.marginBottom = "5px";
@@ -1180,13 +1182,13 @@ class ColumnPresetsManagerUI {
     const exportDropdown = this.createExportAccountDropdown();
     const presetDropdown = this.createPresetDropdown();
     
-    const exportButton = this.createButton("export-btn", "Export Column Preset to JSON", async () => {
+    const exportButton = this.createButton("export-btn", "Скачать пресет в JSON", async () => {
       if (!this.selectedExportAccountId) {
-        alert("Please select an account to export from.");
+        alert("Выберите аккаунт для экспорта.");
         return;
       }
       if (!this.selectedPreset) {
-        alert("Please select a preset to export.");
+        alert("Выберите пресет для экспорта.");
         return;
       }
       await exportColumnPreset(this.selectedPreset, this.accountSizes, this.selectedExportAccountId);
@@ -1217,15 +1219,15 @@ class ColumnPresetsManagerUI {
     
     const sizesLabel = document.createElement("label");
     sizesLabel.htmlFor = "ywbImportSizes";
-    sizesLabel.textContent = "Also import column sizes";
+    sizesLabel.textContent = "Также импортировать ширины колонок";
     sizesLabel.style.fontSize = "14px";
     
     importSizesCheckbox.appendChild(sizesCheckbox);
     importSizesCheckbox.appendChild(sizesLabel);
     
-    const importButton = this.createButton("import-btn", "Import Column Preset to Selected Accounts", async () => {
+    const importButton = this.createButton("import-btn", "Импортировать пресет в выбранные аккаунты", async () => {
       if (!this.selectedImportAccountIds || this.selectedImportAccountIds.length === 0) {
-        alert("Please select at least one account to import to.");
+        alert("Выберите хотя бы один аккаунт для импорта.");
         return;
       }
       
