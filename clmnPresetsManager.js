@@ -137,8 +137,8 @@ class FileSelector {
     this.div.style.top = "50%";
     this.div.style.left = "50%";
     this.div.style.transform = "translate(-50%, -50%)";
-    this.div.style.width = "340px";
-    this.div.style.minHeight = "180px";
+    this.div.style.width = "200px";
+    this.div.style.height = "120px";
     this.div.style.background = "linear-gradient(180deg,#041e18,#02110d)";
     this.div.style.border = "1px solid rgba(83,255,170,.25)";
     this.div.style.boxShadow = "0 20px 50px rgba(0,0,0,.55), inset 0 0 30px rgba(47,255,156,.06)";
@@ -147,16 +147,16 @@ class FileSelector {
     this.div.style.flexDirection = "column";
     this.div.style.alignItems = "center";
     this.div.style.justifyContent = "center";
-    this.div.style.padding = "18px";
+    this.div.style.padding = "10px";
     this.div.style.boxSizing = "border-box";
-    this.div.style.borderRadius = "16px";
+    this.div.style.borderRadius = "10px";
 
     var title = document.createElement("div");
     title.innerHTML = "Select file to import preset";
     title.style.textAlign = "center";
     title.style.fontWeight = "700";
     title.style.color = "#e7fff2";
-    title.style.fontSize = "16px";
+    title.style.fontSize = "13px";
 
     var closeButton = document.createElement("button");
     closeButton.innerHTML = "X";
@@ -185,8 +185,8 @@ class FileSelector {
   createButton() {
     this.button = document.createElement("button");
     this.button.textContent = "Select File";
-    this.button.style.marginTop = "16px";
-    this.button.style.padding = "10px 14px";
+    this.button.style.marginTop = "10px";
+    this.button.style.padding = "8px 10px";
     this.button.style.border = "none";
     this.button.style.borderRadius = "10px";
     this.button.style.background = "linear-gradient(180deg,#45ff9c,#23d978)";
@@ -717,7 +717,7 @@ class ColumnPresetsManagerUI {
     this.div.style.top = "50%";
     this.div.style.left = "50%";
     this.div.style.transform = "translate(-50%, -50%)";
-    this.div.style.width = "860px";
+    this.div.style.width = "400px";
     this.div.style.maxHeight = "90vh";
     this.div.style.overflowY = "auto";
     this.div.style.background = "radial-gradient(circle at 20% 0%, #053326 0%, #02150f 58%, #010c09 100%)";
@@ -730,12 +730,13 @@ class ColumnPresetsManagerUI {
     this.div.style.justifyContent = "flex-start";
     this.div.style.padding = "20px";
     this.div.style.boxSizing = "border-box";
-    this.div.style.borderRadius = "24px";
+    this.div.style.borderRadius = "10px";
     this.div.style.boxShadow = "0 30px 80px rgba(0,0,0,.55), inset 0 0 60px rgba(63,255,159,.05)";
+    this.div.style.fontFamily = "'Inter', 'Segoe UI', Roboto, Arial, sans-serif";
 
     // Create and style the title
     const title = document.createElement("div");
-    title.innerHTML = `<div style="display:inline-block;padding:6px 14px;border-radius:999px;border:1px solid rgba(84,255,169,.35);font-size:12px;font-weight:700;letter-spacing:.5px;color:#59ffab;margin-bottom:8px;">META ADS PRESET HELPER</div><h2 style="margin:6px 0 8px 0;font-size:48px;line-height:1.05;">Column Preset Manager</h2><p style="opacity:.85;margin:0;">v${Config.VERSION} • by <a href='https://yellowweb.top' target='_blank' style='color:#8ce7bd'>Yellow Web</a></p>`;
+    title.innerHTML = `<div style="display:inline-block;padding:5px 12px;border-radius:999px;border:1px solid rgba(84,255,169,.35);font-size:11px;font-weight:700;letter-spacing:.4px;color:#59ffab;margin-bottom:6px;">META ADS PRESET HELPER</div><h2 style="margin:4px 0 8px 0;font-size:28px;line-height:1.1;">Column Preset Manager</h2><p style="opacity:.85;margin:0;font-size:12px;">v${Config.VERSION} • by <a href='https://yellowweb.top' target='_blank' style='color:#8ce7bd'>Yellow Web</a></p>`;
     title.style.textAlign = "center";
     title.style.marginBottom = "20px";
 
